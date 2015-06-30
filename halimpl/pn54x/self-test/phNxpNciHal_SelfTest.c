@@ -1416,7 +1416,7 @@ NFCSTATUS phNxpNciHal_TestMode_open (void)
     /* Read the nfc device node name */
     if (!GetNxpStrValue (NAME_NXP_NFC_DEV_NODE, nfc_dev_node, sizeof(nfc_dev_node)))
     {
-        strlcpy (nfc_dev_node, "/dev/nq-nci", sizeof(nfc_dev_node));
+        strlcpy (nfc_dev_node, NXP_NFC_DEVICE, sizeof(nfc_dev_node));
         NXPLOG_NCIHAL_E("Invalid nfc device node name keeping the default device node %s", nfc_dev_node);
     }
 

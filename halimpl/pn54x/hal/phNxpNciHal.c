@@ -533,11 +533,7 @@ int phNxpNciHal_MinOpen(nfc_stack_callback_t *p_cback, nfc_stack_data_callback_t
     /* Read the nfc device node name */
     if (!GetNxpStrValue (NAME_NXP_NFC_DEV_NODE, nfc_dev_node, sizeof(nfc_dev_node)))
     {
-#if (NFC_NXP_CHIP_TYPE == PN547C2)
-        strlcpy(nfc_dev_node, "/dev/pn544", sizeof(nfc_dev_node));
-#else
-        strlcpy(nfc_dev_node, "/dev/nq-nci", sizeof(nfc_dev_node));
-#endif
+        strlcpy(nfc_dev_node, NXP_NFC_DEVICE, sizeof(nfc_dev_node));
         NXPLOG_NCIHAL_E("Invalid nfc device node name keeping the default device node %s", nfc_dev_node);
     }
 
@@ -707,7 +703,7 @@ int phNxpNciHal_open(nfc_stack_callback_t *p_cback, nfc_stack_data_callback_t *p
     /* Read the nfc device node name */
     if (!GetNxpStrValue (NAME_NXP_NFC_DEV_NODE, nfc_dev_node, sizeof(nfc_dev_node)))
     {
-        strlcpy (nfc_dev_node, "/dev/nq-nci", sizeof(nfc_dev_node));
+        strlcpy (nfc_dev_node, NXP_NFC_DEVICE, sizeof(nfc_dev_node));
         NXPLOG_NCIHAL_E("Invalid nfc device node name keeping the default device node %s", nfc_dev_node);
     }
 
@@ -3204,4 +3200,3 @@ NFCSTATUS phNxpNciHal_send_get_cfgs()
     mGetCfg_info->isGetcfg = FALSE;
     return status;
 }
-
