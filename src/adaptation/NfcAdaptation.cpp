@@ -1,29 +1,16 @@
 /******************************************************************************
  *
+ *  Copyright (c) 2015, The Linux Foundation. All rights reserved.
+ *  Not a Contribution.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *  The original Work has been changed by NXP Semiconductors.
+ *
  *  Copyright (C) 1999-2012 Broadcom Corporation
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at:
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- ******************************************************************************/
-/******************************************************************************
- *
- *  The original Work has been changed by NXP Semiconductors.
- *
- *  Copyright (C) 2015 NXP Semiconductors
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
  *
  *  http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -325,8 +312,8 @@ void NfcAdaptation::InitializeHalDeviceContext ()
     int ret = 0; //0 means success
     if ( !GetStrValue ( NAME_NCI_HAL_MODULE, nci_hal_module, sizeof ( nci_hal_module) ) )
     {
-        ALOGE("No HAL module specified in config, falling back to BCM2079x");
-        strlcpy (nci_hal_module, "nfc_nci.bcm2079x", sizeof(nci_hal_module));
+        ALOGE("No HAL module specified in config, falling back to nqx");
+        strlcpy (nci_hal_module, "nfc_nci.nqx", sizeof(nci_hal_module));
     }
     const hw_module_t* hw_module = NULL;
 
@@ -484,6 +471,12 @@ void NfcAdaptation::HalWrite (UINT16 data_len, UINT8* p_data)
 }
 
 #if((NFC_POWER_MANAGEMENT == TRUE)&&(NXP_EXTNS == TRUE))
+typedef struct {
+    struct nfc_nci_device nci_device;
+
+    /* Local definitions */
+    int(*ioctl)(const struct nfc_nci_device *p_dev, long arg, void *p_data);
+} pn547_dev_t;
 /*******************************************************************************
 **
 ** Function:    NfcAdaptation::HalIoctl
@@ -505,7 +498,8 @@ int NfcAdaptation::HalIoctl (long arg, void* p_data)
     ALOGD ("%s", func);
     if (mHalDeviceContext)
     {
-        return (mHalDeviceContext->ioctl (mHalDeviceContext, arg, p_data));
+        pn547_dev_t *dev = (pn547_dev_t*)mHalDeviceContext;
+        return (dev->ioctl (mHalDeviceContext, arg, p_data));
     }
     return -1;
 }

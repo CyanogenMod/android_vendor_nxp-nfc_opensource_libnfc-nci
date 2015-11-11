@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) 2015, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
+ *
  * Copyright (C) 2015 NXP Semiconductors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -1413,8 +1416,8 @@ NFCSTATUS phNxpNciHal_TestMode_open (void)
     }
     else if (!GetNxpStrValue (NAME_NXP_NFC_DEV_NODE, nfc_dev_node, sizeof (nfc_dev_node)))
     {
-        NXPLOG_NCIHAL_E("Invalid nfc device node name keeping the default device node /dev/pn544");
-        strcpy (nfc_dev_node, "/dev/pn544");
+        NXPLOG_NCIHAL_E("Invalid nfc device node name keeping the default device node /dev/nq-nci");
+        strcpy (nfc_dev_node, "/dev/nq-nci");
     }
 
     gDrvCfg.nClientId = phDal4Nfc_msgget(0, 0600);

@@ -32,11 +32,13 @@ LOCAL_ARM_MODE := arm
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
-LOCAL_MODULE := nfc_nci.pn54x.default
+LOCAL_MODULE := nfc_nci.nqx.default
 LOCAL_MODULE_RELATIVE_PATH := hw
 LOCAL_SRC_FILES := $(call all-c-files-under, .)  $(call all-cpp-files-under, .)
 LOCAL_SHARED_LIBRARIES := libhardware_legacy libcutils liblog libdl
 LOCAL_MODULE_TAGS := optional
+LOCAL_PROPRIETARY_MODULE := true
+LOCAL_MODULE_OWNER := nxp
 
 LOCAL_C_INCLUDES += \
 	$(LOCAL_PATH)/utils \
@@ -75,3 +77,19 @@ LOCAL_CFLAGS += $(D_CFLAGS)
 #LOCAL_CFLAGS += -DFELICA_CLT_ENABLE
 #-DNXP_PN547C1_DOWNLOAD
 include $(BUILD_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE       := libnfc-brcm.conf
+LOCAL_MODULE_TAGS  := optional
+LOCAL_MODULE_CLASS := ETC
+LOCAL_MODULE_PATH  := $(TARGET_OUT_ETC)
+LOCAL_SRC_FILES    := $(LOCAL_MODULE)
+include $(BUILD_PREBUILT)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE       := libnfc-nxp.conf
+LOCAL_MODULE_TAGS  := optional
+LOCAL_MODULE_CLASS := ETC
+LOCAL_MODULE_PATH  := $(TARGET_OUT_ETC)
+LOCAL_SRC_FILES    := libnfc-nxp-PN548C2_example.conf
+include $(BUILD_PREBUILT)

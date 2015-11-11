@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) 2015, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
+ *
  * Copyright (C) 2015 NXP Semiconductors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,11 +23,15 @@
 #include <hardware/hardware.h>
 #include <hardware/nfc.h>
 
+#define NFC_NCI_NXP_PN54X_HARDWARE_MODULE_ID "nfc_nci.nqx"
+
 typedef struct
 {
     struct nfc_nci_device nci_device;
 
     /* Local definitions */
+    int (*ioctl)(const struct nfc_nci_device *p_dev, long arg, void *p_data);
+
 } pn547_dev_t;
 
 /* NXP HAL functions */

@@ -362,7 +362,7 @@ NFCSTATUS phTmlNfc_set_pid(void *pDevHandle, long pid)
         return NFCSTATUS_FAILED;
     }
 
-    ret = ioctl((int32_t)pDevHandle, P544_SET_NFC_SERVICE_PID, pid);
+    ret = ioctl((intptr_t)pDevHandle, P544_SET_NFC_SERVICE_PID, pid);
     return ret;
 }
 

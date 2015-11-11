@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) 2015, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
+ *
  * Copyright (C) 2015 NXP Semiconductors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -225,7 +228,7 @@ static int nfc_open(const hw_module_t* module, const char* name,
         /* NCI HAL method pointers */
         dev->nci_device.open = hal_open;
         dev->nci_device.write = hal_write;
-        dev->nci_device.ioctl = hal_ioctl;
+        dev->ioctl = hal_ioctl;
         dev->nci_device.core_initialized = hal_core_initialized;
         dev->nci_device.pre_discover = hal_pre_discover;
         dev->nci_device.close = hal_close;

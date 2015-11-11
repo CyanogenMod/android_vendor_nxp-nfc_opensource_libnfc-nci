@@ -1,3 +1,4 @@
+ifeq ($(strip $(TARGET_USES_NQ_NFC)),true)
 # function to find all *.cpp files under a directory
 define all-cpp-files-under
 $(patsubst ./%,%, \
@@ -67,8 +68,10 @@ D_CFLAGS += -DNFC_POWER_MANAGEMENT=FALSE
 # Build shared library system/lib/libnfc-nci.so for stack code.
 
 LOCAL_ARM_MODE := arm
-LOCAL_MODULE := libnfc-nci
+LOCAL_MODULE := libnqnfc-nci
 LOCAL_MODULE_TAGS := optional
+LOCAL_PROPRIETARY_MODULE := true
+LOCAL_MODULE_OWNER := nxp
 LOCAL_SHARED_LIBRARIES := libhardware_legacy libcutils liblog libdl libhardware
 LOCAL_CFLAGS += $(D_CFLAGS)
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/src/include \
@@ -94,3 +97,4 @@ include $(BUILD_SHARED_LIBRARY)
 
 ######################################
 include $(call all-makefiles-under,$(LOCAL_PATH))
+endif
