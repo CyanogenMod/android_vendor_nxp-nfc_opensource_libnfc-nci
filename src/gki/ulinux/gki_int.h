@@ -19,6 +19,7 @@
 #define GKI_INT_H
 
 #include "gki_common.h"
+#include <stdlib.h>
 #include <pthread.h>
 
 /**********************************************************************
@@ -76,4 +77,3 @@ GKI_API extern tGKI_CB *gki_cb_ptr;
 #endif
 
 #endif
-

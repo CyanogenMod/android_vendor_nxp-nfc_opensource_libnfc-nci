@@ -296,4 +296,3 @@ UINT8 HAL_NfcSetTraceLevel (UINT8 new_level);
 #endif
 
 #endif /* NFC_HAL_INT_API_H */
-

@@ -78,4 +78,3 @@ void nfa_nv_ci_write (tNFA_NV_CO_STATUS status)
         nfa_sys_sendmsg (p_msg);
     }
 }
-

@@ -1042,15 +1042,15 @@ tNFA_STATUS NFA_P2pGetRemoteSap (tNFA_HANDLE handle,
 **                  NFA_STATUS_FAILED otherwise
 **
 *******************************************************************************/
-tNFA_STATUS NFA_P2pSetLLCPConfig (UINT16 link_miu,
-                                  UINT8  opt,
-                                  UINT8  wt,
-                                  UINT16 link_timeout,
-                                  UINT16 inact_timeout_init,
-                                  UINT16 inact_timeout_target,
-                                  UINT16 symm_delay,
-                                  UINT16 data_link_timeout,
-                                  UINT16 delay_first_pdu_timeout)
+tNFA_STATUS NFA_P2pSetLLCPConfig (UINT16  link_miu,
+                                  UINT8   opt,
+                                  UINT8   wt,
+                                  UINT16  link_timeout,
+                                  UINT16  inact_timeout_init,
+                                  UINT16  inact_timeout_target,
+                                  UINT16  symm_delay,
+                                  UINT16  data_link_timeout,
+                                  UINT16  delay_first_pdu_timeout)
 {
     tNFA_P2P_API_SET_LLCP_CFG *p_msg;
 
@@ -1132,8 +1132,7 @@ void NFA_P2pGetLLCPConfig (UINT16 *p_link_miu,
                      *p_link_miu, *p_opt, *p_wt, *p_link_timeout);
     P2P_TRACE_API4 ("                       inact_timeout(init:%d, target:%d), symm_delay:%d, data_link_timeout:%d",
                      *p_inact_timeout_init, *p_inact_timeout_target, *p_symm_delay, *p_data_link_timeout);
-    P2P_TRACE_API1 ("                       delay_first_pdu_timeout:%d", *p_delay_first_pdu_timeout);
-
+    P2P_TRACE_API1 ("delay_first_pdu_timeout:%d",*p_delay_first_pdu_timeout);
 }
 
 /*******************************************************************************
@@ -1153,4 +1152,3 @@ UINT8 NFA_P2pSetTraceLevel (UINT8 new_level)
 
     return (nfa_p2p_cb.trace_level);
 }
-

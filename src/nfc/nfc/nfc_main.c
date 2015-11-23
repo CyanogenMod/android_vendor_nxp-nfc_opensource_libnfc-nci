@@ -15,7 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 /******************************************************************************
  *
@@ -61,9 +79,17 @@
 #if NFC_DYNAMIC_MEMORY == FALSE
 tNFC_CB nfc_cb;
 #endif
-
+UINT8 i2c_fragmentation_enabled = 0xff;
 #if (NFC_RW_ONLY == FALSE)
-#define NFC_NUM_INTERFACE_MAP   2
+#if(NXP_EXTNS == TRUE)
+#if(NFC_NXP_CHIP_TYPE != PN547C2)
+#define NFC_NUM_INTERFACE_MAP   4
+#else
+#define NFC_NUM_INTERFACE_MAP   3
+#endif
+#else
+#define NFC_NUM_INTERFACE_MAP   3
+#endif
 #else
 #define NFC_NUM_INTERFACE_MAP   1
 #endif
@@ -84,6 +110,23 @@ static const tNCI_DISCOVER_MAPS nfc_interface_mapping[NFC_NUM_INTERFACE_MAP] =
         NCI_INTERFACE_MODE_POLL_N_LISTEN,
         NCI_INTERFACE_NFC_DEP
     }
+#endif
+#if(NXP_EXTNS == TRUE)
+    ,
+    {
+        NCI_PROTOCOL_MIFARE,
+        NCI_INTERFACE_MODE_POLL,
+        NCI_INTERFACE_MIFARE
+    }
+#if(NFC_NXP_CHIP_TYPE != PN547C2)
+    ,
+    /* This mapping is for Felica on DH  */
+    {
+        NCI_PROTOCOL_T3T,
+        NCI_INTERFACE_MODE_LISTEN,
+        NCI_INTERFACE_FRAME
+    }
+#endif
 #endif
 };
 
@@ -163,6 +206,9 @@ static char *nfc_hal_event_name (UINT8 event)
     case HAL_NFC_ERROR_EVT:
         return ("HAL_NFC_ERROR_EVT");
 
+    case HAL_NFC_ENABLE_I2C_FRAGMENTATION_EVT:
+        return (" HAL_NFC_ENABLE_I2C_FRAGMENTATION_EVT ");
+
     default:
         return ("???? UNKNOWN EVENT");
     }
@@ -238,7 +284,11 @@ void nfc_enabled (tNFC_STATUS nfc_status, BT_HDR *p_init_rsp_msg)
         {
             if ((*p) <= NCI_INTERFACE_MAX)
                 evt_data.enable.nci_interfaces |= (1 << (*p));
+            #if(NXP_EXTNS == TRUE)
+            else if (((*p) >= NCI_INTERFACE_FIRST_VS) && (yy < NFC_NFCC_MAX_NUM_VS_INTERFACE))
+            #else
             else if (((*p) > NCI_INTERFACE_FIRST_VS) && (yy < NFC_NFCC_MAX_NUM_VS_INTERFACE))
+            #endif
             {
                 /* save the VS RF interface in control block, if there's still room */
                 nfc_cb.vs_interface[yy++] = *p;
@@ -322,7 +372,17 @@ void nfc_gen_cleanup (void)
     if (nfc_cb.flags & NFC_FL_DISCOVER_PENDING)
     {
         nfc_cb.flags &= ~NFC_FL_DISCOVER_PENDING;
+
+#if(NXP_EXTNS == TRUE)
+        if(nfc_cb.p_last_disc)
+        {
+            GKI_freebuf (nfc_cb.p_last_disc);
+            nfc_cb.p_last_disc = NULL;
+        }
+        nfc_cb.p_last_disc = nfc_cb.p_disc_pending;
+#else
         GKI_freebuf (nfc_cb.p_disc_pending);
+#endif
         nfc_cb.p_disc_pending = NULL;
     }
 
@@ -423,7 +483,16 @@ void nfc_main_handle_hal_evt (tNFC_HAL_EVT_MSG *p_msg)
             nfc_cb.flags &= ~NFC_FL_DISCOVER_PENDING;
             ps            = (UINT8 *)nfc_cb.p_disc_pending;
             nci_snd_discover_cmd (*ps, (tNFC_DISCOVER_PARAMS *)(ps + 1));
+#if(NXP_EXTNS == TRUE)
+            if(nfc_cb.p_last_disc)
+            {
+                GKI_freebuf( nfc_cb.p_last_disc);
+                nfc_cb.p_last_disc = NULL;
+            }
+            nfc_cb.p_last_disc = nfc_cb.p_disc_pending;
+#else
             GKI_freebuf (nfc_cb.p_disc_pending);
+#endif
             nfc_cb.p_disc_pending = NULL;
         }
         else
@@ -600,7 +669,12 @@ static void nfc_main_hal_cback(UINT8 event, tHAL_NFC_STATUS status)
     case HAL_NFC_ERROR_EVT:
         nfc_main_post_hal_evt (event, status);
         break;
-
+    case HAL_NFC_ENABLE_I2C_FRAGMENTATION_EVT:
+    {
+        NFC_TRACE_DEBUG1 ("nfc_main_hal_cback handled  event  %x", event);
+        set_i2c_fragmentation_enabled(I2C_FRAGMENATATION_ENABLED);
+    }
+        break;
     default:
         NFC_TRACE_DEBUG1 ("nfc_main_hal_cback unhandled event %x", event);
         break;
@@ -840,10 +914,18 @@ tNFC_STATUS NFC_DiscoveryMap (UINT8 num, tNFC_DISCOVER_MAPS *p_maps,
     UINT8   xx, yy, num_intf, intf_mask;
     tNFC_DISCOVER_MAPS  max_maps[NFC_NFCC_MAX_NUM_VS_INTERFACE + NCI_INTERFACE_MAX];
     BOOLEAN is_supported;
-
+    #if (NXP_EXTNS == TRUE)
+    nfc_cb.num_disc_maps = num;
+    #endif
     nfc_cb.p_discv_cback = p_cback;
     num_intf             = 0;
     NFC_TRACE_DEBUG1 ("nci_interfaces supported by NFCC: 0x%x", nfc_cb.nci_interfaces);
+
+    for(xx = 0; xx < NFC_NFCC_MAX_NUM_VS_INTERFACE + NCI_INTERFACE_MAX; xx++)
+    {
+        memset(&max_maps[xx], 0x00, sizeof(tNFC_DISCOVER_MAPS));
+    }
+
     for (xx = 0; xx < num_disc_maps; xx++)
     {
         is_supported = FALSE;
@@ -873,6 +955,14 @@ tNFC_STATUS NFC_DiscoveryMap (UINT8 num, tNFC_DISCOVER_MAPS *p_maps,
         }
     }
 
+    NFC_TRACE_WARNING1 ("num_intf = 0x%2x",num_intf);
+
+    for(xx = 0; xx < NFC_NFCC_MAX_NUM_VS_INTERFACE + NCI_INTERFACE_MAX; xx++)
+    {
+        NFC_TRACE_WARNING2 ("max_maps[%d].intf_type = 0x%2x",xx,max_maps[xx].intf_type);
+        NFC_TRACE_WARNING2 ("max_maps[%d].mode = 0x%2x",xx,max_maps[xx].mode);
+        NFC_TRACE_WARNING2 ("max_maps[%d].protocol = 0x%2x",xx,max_maps[xx].protocol);
+    }
     return nci_snd_discover_map_cmd (num_intf, (tNCI_DISCOVER_MAPS *) max_maps);
 }
 
@@ -1176,7 +1266,16 @@ tNFC_STATUS NFC_Deactivate (tNFC_DEACT_TYPE deactivate_type)
             /* if HAL did not request for control, clear this bit now */
             nfc_cb.flags &= ~NFC_FL_CONTROL_REQUESTED;
         }
+#if(NXP_EXTNS == TRUE)
+        if( nfc_cb.p_last_disc)
+        {
+            GKI_freebuf (nfc_cb.p_last_disc);
+            nfc_cb.p_last_disc = NULL;
+        }
+        nfc_cb.p_last_disc = nfc_cb.p_disc_pending;
+#else
         GKI_freebuf (nfc_cb.p_disc_pending);
+#endif
         nfc_cb.p_disc_pending = NULL;
         return NFC_STATUS_OK;
     }
@@ -1344,6 +1443,61 @@ UINT8 NFC_SetTraceLevel (UINT8 new_level)
 
     return (nfc_cb.trace_level);
 }
+void set_i2c_fragmentation_enabled(int value)
+{
+    i2c_fragmentation_enabled = value;
+}
+
+int  get_i2c_fragmentation_enabled()
+{
+    return i2c_fragmentation_enabled;
+}
+
+#if((NFC_POWER_MANAGEMENT == TRUE)&&(NXP_EXTNS == TRUE))
+/*******************************************************************************
+**
+** Function         NFC_ReqWiredAccess
+**
+** Description      This function request to pn54x driver to get access
+**                  of P61. Status would be updated to pdata
+**
+** Returns          0 if api call success, else -1
+**
+*******************************************************************************/
+INT32 NFC_ReqWiredAccess (void *pdata)
+{
+    return (nfc_cb.p_hal->ioctl(1, pdata));
+}
+/*******************************************************************************
+**
+** Function         NFC_RelWiredAccess
+**
+** Description      This function release access
+**                  of P61. Status would be updated to pdata
+**
+** Returns          0 if api call success, else -1
+**
+*******************************************************************************/
+INT32 NFC_RelWiredAccess (void *pdata)
+{
+    return (nfc_cb.p_hal->ioctl(0, pdata));
+}
+/*******************************************************************************
+**
+** Function         NFC_GetP61Status
+**
+** Description      This function gets the current access state
+**                  of P61. Current state would be updated to pdata
+**
+** Returns          0 if api call success, else -1
+**
+*******************************************************************************/
+INT32 NFC_GetP61Status (void *pdata)
+{
+    return (nfc_cb.p_hal->ioctl(2, pdata));
+}
+#endif
+
 
 #if (BT_TRACE_VERBOSE == TRUE)
 /*******************************************************************************

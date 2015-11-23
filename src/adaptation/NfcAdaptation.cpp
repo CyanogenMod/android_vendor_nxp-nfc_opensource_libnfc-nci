@@ -15,6 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 #include "OverrideLog.h"
 #include "NfcAdaptation.h"
 extern "C"
@@ -40,9 +59,17 @@ tHAL_NFC_CBACK* NfcAdaptation::mHalCallback = NULL;
 tHAL_NFC_DATA_CBACK* NfcAdaptation::mHalDataCallback = NULL;
 ThreadCondVar NfcAdaptation::mHalOpenCompletedEvent;
 ThreadCondVar NfcAdaptation::mHalCloseCompletedEvent;
+#if (NXP_EXTNS == TRUE)
+ThreadCondVar NfcAdaptation::mHalCoreResetCompletedEvent;
+ThreadCondVar NfcAdaptation::mHalCoreInitCompletedEvent;
+ThreadCondVar NfcAdaptation::mHalInitCompletedEvent;
+#endif
 
 UINT32 ScrProtocolTraceFlag = SCR_PROTO_TRACE_ALL; //0x017F00;
 UINT8 appl_trace_level = 0xff;
+#if (NXP_EXTNS == TRUE)
+UINT8 appl_dta_mode_flag = 0x00;
+#endif
 char bcm_nfc_location[120];
 char nci_hal_module[64];
 
@@ -309,6 +336,9 @@ void NfcAdaptation::InitializeHalDeviceContext ()
     mHalEntryFuncs.close = HalClose;
     mHalEntryFuncs.core_initialized = HalCoreInitialized;
     mHalEntryFuncs.write = HalWrite;
+#if((NFC_POWER_MANAGEMENT == TRUE)&&(NXP_EXTNS == TRUE))
+    mHalEntryFuncs.ioctl = HalIoctl;
+#endif
     mHalEntryFuncs.prediscover = HalPrediscover;
     mHalEntryFuncs.control_granted = HalControlGranted;
     mHalEntryFuncs.power_cycle = HalPowerCycle;
@@ -453,6 +483,36 @@ void NfcAdaptation::HalWrite (UINT16 data_len, UINT8* p_data)
     }
 }
 
+#if((NFC_POWER_MANAGEMENT == TRUE)&&(NXP_EXTNS == TRUE))
+/*******************************************************************************
+**
+** Function:    NfcAdaptation::HalIoctl
+**
+** Description: Calls ioctl to the Nfc driver.
+**              If called with a arg value of 0x01 than wired access requested,
+**              status of the requst would be updated to p_data.
+**              If called with a arg value of 0x00 than wired access will be
+**              released, status of the requst would be updated to p_data.
+**              If called with a arg value of 0x02 than current p61 state would be
+**              updated to p_data.
+**
+** Returns:     -1 or 0.
+**
+*******************************************************************************/
+int NfcAdaptation::HalIoctl (long arg, void* p_data)
+{
+    const char* func = "NfcAdaptation::HalIoctl";
+    ALOGD ("%s", func);
+    if (mHalDeviceContext)
+    {
+        return (mHalDeviceContext->ioctl (mHalDeviceContext, arg, p_data));
+    }
+    return -1;
+}
+
+#endif
+
+
 /*******************************************************************************
 **
 ** Function:    NfcAdaptation::HalCoreInitialized
@@ -579,12 +639,37 @@ void NfcAdaptation::DownloadFirmware ()
 {
     const char* func = "NfcAdaptation::DownloadFirmware";
     ALOGD ("%s: enter", func);
+#if (NXP_EXTNS == TRUE)
+    static UINT8 cmd_reset_nci[] = {0x20,0x00,0x01,0x01};
+    static UINT8 cmd_init_nci[]  = {0x20,0x01,0x00};
+    static UINT8 cmd_reset_nci_size = sizeof(cmd_reset_nci) / sizeof(UINT8);
+    static UINT8 cmd_init_nci_size  = sizeof(cmd_init_nci)  / sizeof(UINT8);
+    UINT8 p_core_init_rsp_params;
+#endif
     HalInitialize ();
 
     mHalOpenCompletedEvent.lock ();
     ALOGD ("%s: try open HAL", func);
     HalOpen (HalDownloadFirmwareCallback, HalDownloadFirmwareDataCallback);
     mHalOpenCompletedEvent.wait ();
+#if (NXP_EXTNS == TRUE)
+    /* Send a CORE_RESET and CORE_INIT to the NFCC. This is required because when calling
+     * HalCoreInitialized, the HAL is going to parse the conf file and send NCI commands
+     * to the NFCC. Hence CORE-RESET and CORE-INIT have to be sent prior to this.
+     */
+    mHalCoreResetCompletedEvent.lock();
+    ALOGD("%s: send CORE_RESET", func);
+    HalWrite(cmd_reset_nci_size , cmd_reset_nci);
+    mHalCoreResetCompletedEvent.wait();
+    mHalCoreInitCompletedEvent.lock();
+    ALOGD("%s: send CORE_INIT", func);
+    HalWrite(cmd_init_nci_size , cmd_init_nci);
+    mHalCoreInitCompletedEvent.wait();
+    mHalInitCompletedEvent.lock ();
+    ALOGD ("%s: try init HAL", func);
+    HalCoreInitialized (&p_core_init_rsp_params);
+    mHalInitCompletedEvent.wait ();
+#endif
 
     mHalCloseCompletedEvent.lock ();
     ALOGD ("%s: try close HAL", func);
@@ -616,6 +701,12 @@ void NfcAdaptation::HalDownloadFirmwareCallback (nfc_event_t event, nfc_status_t
             mHalOpenCompletedEvent.signal ();
             break;
         }
+    case HAL_NFC_POST_INIT_CPLT_EVT:
+        {
+            ALOGD ("%s: HAL_NFC_POST_INIT_CPLT_EVT", func);
+            mHalInitCompletedEvent.signal ();
+            break;
+        }
     case HAL_NFC_CLOSE_CPLT_EVT:
         {
             ALOGD ("%s: HAL_NFC_CLOSE_CPLT_EVT", func);
@@ -636,6 +727,19 @@ void NfcAdaptation::HalDownloadFirmwareCallback (nfc_event_t event, nfc_status_t
 *******************************************************************************/
 void NfcAdaptation::HalDownloadFirmwareDataCallback (uint16_t data_len, uint8_t* p_data)
 {
+#if (NXP_EXTNS == TRUE)
+    if (data_len > 3)
+    {
+        if (p_data[0] == 0x40 && p_data[1] == 0x00)
+        {
+            mHalCoreResetCompletedEvent.signal();
+        }
+        else if (p_data[0] == 0x40 && p_data[1] == 0x01)
+        {
+            mHalCoreInitCompletedEvent.signal();
+        }
+    }
+#endif
 }
 
 

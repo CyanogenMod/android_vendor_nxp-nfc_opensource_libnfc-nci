@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2014 NXP Semiconductors
+ * Copyright (C) 2015 NXP Semiconductors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <string.h>
+/* ############################################### Header Includes ################################################ */
 #if ! defined (NXPLOG__H_INCLUDED)
 #    include "phNxpLog.h"
 #    include "phNxpConfig.h"

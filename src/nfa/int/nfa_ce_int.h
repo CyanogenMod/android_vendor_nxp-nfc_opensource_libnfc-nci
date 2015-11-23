@@ -15,7 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 /******************************************************************************
  *
@@ -59,6 +77,9 @@ enum
     NFA_CE_REG_TYPE_ISO_DEP,
     NFA_CE_REG_TYPE_FELICA,
     NFA_CE_REG_TYPE_UICC
+#if(NXP_EXTNS == TRUE)
+    , NFA_CE_REG_TYPE_ESE
+#endif
 };
 typedef UINT8 tNFA_CE_REG_TYPE;
 
@@ -137,7 +158,9 @@ typedef union
 #define NFA_CE_LISTEN_INFO_START_NTF_PND    0x00000100  /* App has not been notified of LISTEN_START yet                    */
 #define NFA_CE_LISTEN_INFO_FELICA           0x00000200  /* This is a listen_info for non-NDEF Felica                        */
 #define NFA_CE_LISTEN_INFO_UICC             0x00000400  /* This is a listen_info for UICC                                   */
-
+#if(NXP_EXTNS == TRUE)
+#define NFA_CE_LISTEN_INFO_ESE              0x00008000  /* This is a listen_info for ESE                                    */
+#endif
 
 /* Structure for listen look up table */
 typedef struct
@@ -213,4 +236,3 @@ void nfa_ce_sys_disable (void);
 void nfa_ce_free_scratch_buf (void);
 BOOLEAN nfa_ce_restart_listen_check (void);
 #endif /* NFA_DM_INT_H */
-

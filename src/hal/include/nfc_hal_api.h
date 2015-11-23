@@ -15,7 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 /******************************************************************************
  *
@@ -57,7 +75,7 @@ typedef UINT8 tHAL_NFC_STATUS;
 #define HAL_NFC_HCI_UICC0_HOST      0x01
 #define HAL_NFC_HCI_UICC1_HOST      0x02
 #define HAL_NFC_HCI_UICC2_HOST      0x04
-
+#define HAL_NFC_ENABLE_I2C_FRAGMENTATION_EVT        0x07
 /*******************************************************************************
 ** tHAL_NFC_CBACK Definitions
 *******************************************************************************/
@@ -86,6 +104,9 @@ typedef void (tHAL_API_OPEN) (tHAL_NFC_CBACK *p_hal_cback, tHAL_NFC_DATA_CBACK *
 typedef void (tHAL_API_CLOSE) (void);
 typedef void (tHAL_API_CORE_INITIALIZED) (UINT8 *p_core_init_rsp_params);
 typedef void (tHAL_API_WRITE) (UINT16 data_len, UINT8 *p_data);
+#if((NFC_POWER_MANAGEMENT == TRUE)&&(NXP_EXTNS == TRUE))
+typedef int (tHAL_API_IOCTL) (long arg, void *p_data);
+#endif
 typedef BOOLEAN (tHAL_API_PREDISCOVER) (void);
 typedef void (tHAL_API_CONTROL_GRANTED) (void);
 typedef void (tHAL_API_POWER_CYCLE) (void);
@@ -119,6 +140,9 @@ typedef struct
     tHAL_API_CLOSE *close;
     tHAL_API_CORE_INITIALIZED *core_initialized;
     tHAL_API_WRITE *write;
+#if((NFC_POWER_MANAGEMENT == TRUE)&&(NXP_EXTNS == TRUE))
+    tHAL_API_IOCTL *ioctl;
+#endif
     tHAL_API_PREDISCOVER *prediscover;
     tHAL_API_CONTROL_GRANTED *control_granted;
     tHAL_API_POWER_CYCLE *power_cycle;

@@ -15,7 +15,6 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-#include <malloc.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <errno.h>
@@ -84,7 +83,7 @@ typedef struct
     UINT8 task_id;          /* GKI task id */
     TASKPTR task_entry;     /* Task entry function*/
     UINT32 params;          /* Extra params to pass to task entry function */
-    pthread_cond_t* pCond;	/* for android*/
+    pthread_cond_t* pCond;  /* for android*/
     pthread_mutex_t* pMutex;  /* for android*/
 } gki_pthread_info_t;
 gki_pthread_info_t gki_pthread_info[GKI_MAX_TASKS];
@@ -173,6 +172,9 @@ void GKI_init(void)
     p_os->no_timer_suspend = GKI_TIMER_TICK_RUN_COND;
     pthread_mutex_init(&p_os->gki_timer_mutex, NULL);
     pthread_cond_init(&p_os->gki_timer_cond, NULL);
+#if (NXP_EXTNS == TRUE)
+    pthread_mutexattr_destroy(&attr);
+#endif
 }
 
 
@@ -265,7 +267,10 @@ UINT8 GKI_create_task (TASKPTR task_entry, UINT8 task_id, INT8 *taskname, UINT16
               &attr1,
               (void *)gki_task_entry,
               &gki_pthread_info[task_id]);
-
+#if (NXP_EXTNS == TRUE)
+    pthread_attr_destroy(&attr1);
+    pthread_condattr_destroy(&attr);
+#endif
     if (ret != 0)
     {
          GKI_TRACE_2("pthread_create failed(%d), %s!", ret, taskname);
@@ -493,7 +498,9 @@ void GKI_run (void *p_task_id)
     struct timespec delay;
     int err = 0;
     volatile int * p_run_cond = &gki_cb.os.no_timer_suspend;
-
+#if (NXP_EXTNS == TRUE)
+    int ret = 0;
+#endif
 #ifndef GKI_NO_TICK_STOP
     /* register start stop function which disable timer loop in GKI_run() when no timers are
      * in any GKI/BTA/BTU this should save power when BTLD is idle! */
@@ -509,10 +516,19 @@ void GKI_run (void *p_task_id)
 
     pthread_attr_init(&timer_attr);
     pthread_attr_setdetachstate(&timer_attr, PTHREAD_CREATE_DETACHED);
+#if (NXP_EXTNS == TRUE)
+    ret = pthread_create( &timer_thread_id,
+            &timer_attr,
+            timer_thread,
+            NULL);
+    pthread_attr_destroy(&timer_attr);
+    if (ret != 0)
+#else
     if (pthread_create( &timer_thread_id,
               &timer_attr,
               timer_thread,
               NULL) != 0 )
+#endif
     {
         GKI_TRACE_0("GKI_run: pthread_create failed to create timer_thread!");
         return GKI_FAILURE;
@@ -927,7 +943,7 @@ void GKI_enable (void)
 {
     GKI_TRACE_0("GKI_enable");
     pthread_mutex_unlock(&gki_cb.os.GKI_mutex);
-/* 	pthread_mutex_xx is nesting save, no need for this: already_disabled = 0; */
+/*  pthread_mutex_xx is nesting save, no need for this: already_disabled = 0; */
     GKI_TRACE_0("Leaving GKI_enable");
     return;
 }
@@ -947,9 +963,9 @@ void GKI_disable (void)
 {
     //GKI_TRACE_0("GKI_disable");
 
-/*	pthread_mutex_xx is nesting save, no need for this: if (!already_disabled) {
+/*  pthread_mutex_xx is nesting save, no need for this: if (!already_disabled) {
     already_disabled = 1; */
-    		pthread_mutex_lock(&gki_cb.os.GKI_mutex);
+            pthread_mutex_lock(&gki_cb.os.GKI_mutex);
 /*  } */
     //GKI_TRACE_0("Leaving GKI_disable");
     return;
@@ -1124,7 +1140,7 @@ void *GKI_os_malloc (UINT32 size)
 void GKI_os_free (void *p_mem)
 {
     if(p_mem != NULL)
-		free(p_mem);
+        free(p_mem);
     return;
 }
 
@@ -1209,7 +1225,7 @@ void GKI_exit_task (UINT8 task_id)
 
     GKI_enable();
 
-	//GKI_send_event(task_id, EVENT_MASK(GKI_SHUTDOWN_EVT));
+    //GKI_send_event(task_id, EVENT_MASK(GKI_SHUTDOWN_EVT));
 
     GKI_TRACE_1("GKI_exit_task %d done", task_id);
     return;
@@ -1290,5 +1306,3 @@ void GKI_shiftup (UINT8 *p_dest, UINT8 *p_src, UINT32 len)
     for (xx = 0; xx < len; xx++)
         *pd++ = *ps++;
 }
-
-

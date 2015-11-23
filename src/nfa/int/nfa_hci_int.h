@@ -15,7 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 /******************************************************************************
  *
@@ -56,6 +74,11 @@ extern BOOLEAN HCI_LOOPBACK_DEBUG;
 #define NFA_HCI_STATE_APP_DEREGISTER        0x06     /* Removing all pipes and gates prior to deregistering the app */
 #define NFA_HCI_STATE_RESTORE               0x07     /* HCI restore */
 #define NFA_HCI_STATE_RESTORE_NETWK_ENABLE  0x08     /* HCI is waiting for initialization of other host in the network after restore */
+
+#if(NXP_EXTNS == TRUE)
+#define NFA_HCI_MAX_RSP_WAIT_TIME           0x0C
+#define NFA_HCI_CHAIN_PKT_RSP_TIMEOUT       30000    /* After the reception of WTX, maximum response timeout value is 30 sec */
+#endif
 
 typedef UINT8 tNFA_HCI_STATE;
 
@@ -361,8 +384,15 @@ typedef struct
 /* Internal flags */
 #define NFA_HCI_FL_DISABLING        0x01                /* sub system is being disabled */
 #define NFA_HCI_FL_NV_CHANGED       0x02                /* NV Ram changed */
+#if (NXP_EXTNS == TRUE)
+#define NFA_HCI_FL_CONN_PIPE 0x01
+#define NFA_HCI_FL_APDU_PIPE 0x02
+#define NFA_HCI_FL_OTHER_PIPE 0x04
 
-
+#define NFA_HCI_CONN_ESE_PIPE 0x16
+#define NFA_HCI_CONN_UICC_PIPE 0x0A
+#define NFA_HCI_APDU_PIPE 0x19
+#endif
 /* NFA HCI control block */
 typedef struct
 {
@@ -382,6 +412,10 @@ typedef struct
     BOOLEAN                         nv_write_needed;                    /* Something changed - NV write is needed */
     BOOLEAN                         assembling;                         /* Set true if in process of assembling a message  */
     BOOLEAN                         assembly_failed;                    /* Set true if Insufficient buffer to Reassemble incoming message */
+#if (NXP_EXTNS == TRUE)
+    UINT8                           assembling_flags;                   /* the flags to keep track of assembling status*/
+    UINT8                           assembly_failed_flags;              /* the flags to keep track of failed assembly*/
+#endif
     BOOLEAN                         w4_rsp_evt;                         /* Application command sent on HCP Event */
     tNFA_HANDLE                     app_in_use;                         /* Index of the application that is waiting for response */
     UINT8                           local_gate_in_use;                  /* Local gate currently working with */
@@ -396,6 +430,17 @@ typedef struct
     UINT16                          max_msg_len;                        /* Maximum reassembled message size */
     UINT8                           msg_data[NFA_MAX_HCI_EVENT_LEN];    /* For segmentation - the combined message data */
     UINT8                           *p_msg_data;                        /* For segmentation - reassembled message */
+#if (NXP_EXTNS == TRUE)
+    UINT8                           *p_evt_data;                        /* For segmentation - reassembled event data */
+    UINT16                          evt_len;                            /* For segmentation - length of the combined event data */
+    UINT16                          max_evt_len;                        /* Maximum reassembled message size */
+    UINT8                           evt_data[NFA_MAX_HCI_EVENT_LEN];    /* For segmentation - the combined event data */
+    UINT8                           type_evt;                               /* Instruction type of incoming message */
+    UINT8                           inst_evt;                               /* Instruction of incoming message */
+    UINT8                           type_msg;                               /* Instruction type of incoming message */
+    UINT8                           inst_msg;                               /* Instruction of incoming message */
+
+#endif
     UINT8                           type;                               /* Instruction type of incoming message */
     UINT8                           inst;                               /* Instruction of incoming message */
 
@@ -445,6 +490,10 @@ extern void nfa_hci_dh_startup_complete (void);
 extern void nfa_hci_startup_complete (tNFA_STATUS status);
 extern void nfa_hci_startup (void);
 extern void nfa_hci_restore_default_config (UINT8 *p_session_id);
+#if (NXP_EXTNS == TRUE)
+extern void nfa_hci_release_transcieve();
+extern void nfa_hci_network_enable();
+#endif
 
 /* Action functions in nfa_hci_act.c
 */

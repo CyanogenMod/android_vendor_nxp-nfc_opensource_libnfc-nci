@@ -144,4 +144,3 @@
 #define TRACE_TYPE_GENERIC          0x00000008
 
 #endif /* NFC_TYPES_H */
-

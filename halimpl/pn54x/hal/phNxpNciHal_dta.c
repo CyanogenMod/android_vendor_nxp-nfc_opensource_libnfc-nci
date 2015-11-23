@@ -1,5 +1,5 @@
- /*
- * Copyright (C) 2012-2014 NXP Semiconductors
+/*
+ * Copyright (C) 2015 NXP Semiconductors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,7 +94,7 @@ NFCSTATUS phNxpNHal_DtaUpdate(uint16_t *cmd_len, uint8_t *p_cmd_data,
 
     if (nxpdta_ctrl.dta_ctrl_flag == TRUE)
     {
-        // Workaround for DTA, block the set config command with general bytes */
+        // DTA: Block the set config command with general bytes */
         if (p_cmd_data[0] == 0x20 && p_cmd_data[1] == 0x02 &&
              p_cmd_data[2] == 0x17 && p_cmd_data[3] == 0x01 &&
              p_cmd_data[4] == 0x29 && p_cmd_data[5] == 0x14 )
@@ -112,7 +112,7 @@ NFCSTATUS phNxpNHal_DtaUpdate(uint16_t *cmd_len, uint8_t *p_cmd_data,
             phNxpNciHal_print_packet("DTARECV", p_rsp_data, 5);
 
             status = NFCSTATUS_FAILED;
-            NXPLOG_NCIHAL_D("Going through DTA workaround - Block set config command END");
+            NXPLOG_NCIHAL_D("DTA - Block set config command END");
 
         }
         else if (p_cmd_data[0] == 0x21 && p_cmd_data[1] == 0x08 && p_cmd_data[2] == 0x04

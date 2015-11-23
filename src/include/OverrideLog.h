@@ -15,7 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 /******************************************************************************
  *
  *  Override the Android logging macro(s) from
@@ -43,6 +61,10 @@ extern "C" {
 extern unsigned char appl_trace_level;
 extern UINT32 ScrProtocolTraceFlag;
 
+#if(NXP_EXTNS == TRUE)
+extern unsigned char appl_dta_mode_flag; //defined for run time DTA mode selection
+#endif
+
 
 /*******************************************************************************
 **
@@ -64,7 +86,18 @@ extern UINT32 ScrProtocolTraceFlag;
 unsigned char initializeGlobalAppLogLevel ();
 UINT32 initializeProtocolLogLevel ();
 
-
+#if (NXP_EXTNS == TRUE)
+/*******************************************************************************
+**
+** Function:        initializeGlobalDtaMode
+**
+** Description:     Initialize and get global DTA mode from .conf
+**
+** Returns:         none:
+**
+*******************************************************************************/
+void initializeGlobalAppDtaMode ();
+#endif
 #ifdef __cplusplus
 }
 #endif

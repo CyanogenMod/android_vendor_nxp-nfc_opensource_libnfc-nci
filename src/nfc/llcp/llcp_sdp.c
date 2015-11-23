@@ -16,6 +16,25 @@
  *
  ******************************************************************************/
 
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 /******************************************************************************
  *
@@ -30,6 +49,11 @@
 #include "llcp_api.h"
 #include "llcp_int.h"
 #include "llcp_defs.h"
+
+#if(NXP_EXTNS == TRUE)
+#include "nfa_sys.h"
+#include "nfa_dm_int.h"
+#endif
 
 /*******************************************************************************
 **
@@ -76,6 +100,17 @@ void llcp_sdp_check_send_snl (void)
         GKI_enqueue (&llcp_cb.lcb.sig_xmit_q, llcp_cb.sdp_cb.p_snl);
         llcp_cb.sdp_cb.p_snl = NULL;
     }
+#if(NXP_EXTNS == TRUE)
+    else
+    {
+        /* Notify DTA after sending out SNL with SDRES not to send SNLs in AGF PDU */
+        if ((llcp_cb.p_dta_cback) && (llcp_cb.dta_snl_resp))
+        {
+            llcp_cb.dta_snl_resp = FALSE;
+            (*llcp_cb.p_dta_cback) ();
+        }
+    }
+#endif
 }
 
 /*******************************************************************************
@@ -174,14 +209,12 @@ tLLCP_STATUS llcp_sdp_send_sdreq (UINT8 tid, char *p_name)
     {
         status = LLCP_STATUS_FAIL;
     }
-
     /* if LM is waiting for PDUs from upper layer */
     if (  (status == LLCP_STATUS_SUCCESS)
         &&(llcp_cb.lcb.symm_state == LLCP_LINK_SYMM_LOCAL_XMIT_NEXT)  )
     {
         llcp_link_check_send_data ();
     }
-
     return status;
 }
 
@@ -277,14 +310,12 @@ static tLLCP_STATUS llcp_sdp_send_sdres (UINT8 tid, UINT8 sap)
     {
         status = LLCP_STATUS_FAIL;
     }
-
     /* if LM is waiting for PDUs from upper layer */
     if (  (status == LLCP_STATUS_SUCCESS)
         &&(llcp_cb.lcb.symm_state == LLCP_LINK_SYMM_LOCAL_XMIT_NEXT)  )
     {
         llcp_link_check_send_data ();
     }
-
     return status;
 }
 
@@ -312,6 +343,14 @@ UINT8 llcp_sdp_get_sap_by_name (char *p_name, UINT8 length)
             &&(strlen((char*)p_app_cb->p_service_name) == length)
             &&(!strncmp((char*)p_app_cb->p_service_name, p_name, length))  )
         {
+#if(NXP_EXTNS == TRUE)
+            /* if device is under LLCP DTA testing */
+            if (  (llcp_cb.p_dta_cback)
+                &&(!strncmp((char*)p_app_cb->p_service_name, "urn:nfc:sn:cl-echo-in", length))  )
+            {
+                llcp_cb.dta_snl_resp = TRUE;
+            }
+#endif
             return (sap);
         }
     }
@@ -380,6 +419,9 @@ void llcp_sdp_proc_deactivation (void)
     }
 
     llcp_cb.sdp_cb.next_tid = 0;
+#if(NXP_EXTNS == TRUE)
+    llcp_cb.dta_snl_resp = FALSE;
+#endif
 }
 
 /*******************************************************************************
@@ -422,6 +464,16 @@ tLLCP_STATUS llcp_sdp_proc_snl (UINT16 sdu_length, UINT8 *p)
             }
             else
             {
+#if(NXP_EXTNS == TRUE)
+                /*For P2P in LLCP mode TC_CTO_TAR_BI_03_x(x=3) fix*/
+                if ((appl_dta_mode_flag == 1) && (nfa_dm_cb.eDtaMode == NFA_DTA_LLCP_MODE))
+                {
+                    LLCP_TRACE_ERROR0 ("DEBUG> llcp_sdp_proc_snl () Calling llcp_sdp_send_sdres");
+                    tid = 0x01;
+                    sap = 0x00;
+                    llcp_sdp_send_sdres (tid, sap);
+                }
+#endif
                 LLCP_TRACE_ERROR1 ("llcp_sdp_proc_snl (): bad length (%d) in LLCP_SDREQ_TYPE", length);
             }
             break;

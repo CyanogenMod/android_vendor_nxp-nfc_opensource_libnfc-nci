@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2014 NXP Semiconductors
+ * Copyright (C) 2015 NXP Semiconductors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,10 @@
 #include <phDal4Nfc_messageQueueLib.h>
 #include <phTmlNfc_i2c.h>
 #include <phNxpNciHal_utils.h>
-
+#if((NFC_POWER_MANAGEMENT == TRUE)&&(NXP_EXTNS == TRUE))
+#include <sys/types.h>
+long nfc_service_pid;
+#endif
 /*
  * Duration of Timer to wait after sending an Nci packet
  */
@@ -76,6 +79,7 @@ static NFCSTATUS phTmlNfc_InitiateTimer(void);
 NFCSTATUS phTmlNfc_Init(pphTmlNfc_Config_t pConfig)
 {
     NFCSTATUS wInitStatus = NFCSTATUS_SUCCESS;
+    NFCSTATUS setPidStatus = NFCSTATUS_SUCCESS;
 
     /* Check if TML layer is already Initialized */
     if (NULL != gpphTmlNfc_Context)
@@ -170,6 +174,21 @@ NFCSTATUS phTmlNfc_Init(pphTmlNfc_Config_t pConfig)
         /* Clear all handles and memory locations initialized during init */
         phTmlNfc_CleanUp();
     }
+#if(NFC_POWER_MANAGEMENT == TRUE)
+    else
+    {
+        nfc_service_pid = getpid();
+        setPidStatus = phTmlNfc_IoCtl(phTmlNfc_e_SetNfcServicePid);
+        if(setPidStatus == NFCSTATUS_SUCCESS)
+       {
+           NXPLOG_TML_D("nfc service set pid done");
+       }
+       else
+       {
+           NXPLOG_TML_D("nfc service set pid failed");
+       }
+    }
+#endif
 
     return wInitStatus;
 }
@@ -922,6 +941,28 @@ NFCSTATUS phTmlNfc_IoCtl(phTmlNfc_ControlCode_t eControlCode)
                     usleep(100 * 1000);
                     break;
                 }
+#if(NFC_POWER_MANAGEMENT == TRUE)
+            case phTmlNfc_e_SetNfcServicePid:
+            {
+                wStatus = phTmlNfc_set_pid(gpphTmlNfc_Context->pDevHandle, nfc_service_pid);
+                break;
+            }
+            case phTmlNfc_e_GetP61PwrMode:
+            {
+                wStatus = phTmlNfc_i2c_get_p61_power_state(gpphTmlNfc_Context->pDevHandle);
+                break;
+            }
+            case phTmlNfc_e_SetP61WiredMode:
+            {
+                wStatus = phTmlNfc_i2c_set_p61_power_state(gpphTmlNfc_Context->pDevHandle, 1);
+                break;
+            }
+            case phTmlNfc_e_SetP61IdleMode:
+            {
+                wStatus = phTmlNfc_i2c_set_p61_power_state(gpphTmlNfc_Context->pDevHandle, 0);
+                break;
+            }
+#endif
             default:
                 {
                     wStatus = NFCSTATUS_INVALID_PARAMETER;

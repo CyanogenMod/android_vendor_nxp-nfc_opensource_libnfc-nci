@@ -15,6 +15,12 @@
  *  limitations under the License.
  *
  ******************************************************************************/
+
+/******************************************************************************
+ *
+ *  Definitions for UPIO driver
+ *
+ ******************************************************************************/
 #ifndef UPIO_H
 #define UPIO_H
 
@@ -302,7 +308,7 @@ UDRV_API void UPIO_Set(tUPIO_TYPE type, tUPIO pio, tUPIO_STATE state);
 **      cannot be masked together.
 **
 ** Input Parameters:
-**      Type:	The type of device.
+**      Type:   The type of device.
 **      pio:    Indicates the particular GUPIO.
 **
 ** Output Parameter:

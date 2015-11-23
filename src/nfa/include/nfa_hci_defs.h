@@ -15,8 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-
-
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 /******************************************************************************
  *
  *  This file contains the NFA HCI related definitions from the
@@ -30,6 +47,11 @@
 /* Static gates */
 #define NFA_HCI_LOOP_BACK_GATE              0x04
 #define NFA_HCI_IDENTITY_MANAGEMENT_GATE    0x05
+#if(NXP_EXTNS == TRUE)
+#ifdef GEMALTO_SE_SUPPORT
+#define NFC_HCI_DEFAULT_DEST_GATE           0XF0
+#endif
+#endif
 
 #define NFA_HCI_FIRST_HOST_SPECIFIC_GENERIC_GATE    0x10
 #define NFA_HCI_LAST_HOST_SPECIFIC_GENERIC_GATE     0xEF
@@ -100,6 +122,9 @@
 #define NFA_HCI_EVT_POST_DATA               0x02
 #define NFA_HCI_EVT_HOT_PLUG                0x03
 
+#if (NXP_EXTNS == TRUE)
+#define NFA_HCI_EVT_WTX                     0x11
+#endif
 
 /* NFA HCI Connectivity gate Events */
 #define NFA_HCI_EVT_CONNECTIVITY            0x10

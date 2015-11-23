@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2014 NXP Semiconductors
+ * Copyright (C) 2015 NXP Semiconductors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,6 @@ extern uint16_t wFwVer;
 /* local buffer to store CORE_INIT response */
 static uint32_t bCoreInitRsp[40];
 static uint32_t iCoreInitRspLen;
-
 extern uint32_t timeoutTimerId;
 
 extern NFCSTATUS read_retry();
@@ -127,6 +126,7 @@ NFCSTATUS phNxpNciHal_process_ext_rsp (uint8_t *p_ntf, uint16_t *p_len)
         p_ntf[5] = 0x03;
         NXPLOG_NCIHAL_D("FelicaReaderMode:Activity 1.1");
     }
+
 
 #ifdef P2P_PRIO_LOGIC_HAL_IMP
     if(p_ntf[0] == 0x61 &&
@@ -277,7 +277,7 @@ NFCSTATUS phNxpNciHal_process_ext_rsp (uint8_t *p_ntf, uint16_t *p_len)
             p_ntf[5] == 0x06 &&
             p_ntf[6] == 0x06)
     {
-        NXPLOG_NCIHAL_D ("> Going through workaround - notification of ISO 15693");
+        NXPLOG_NCIHAL_D ("> Notification for ISO-15693");
         icode_detected = 0x01;
         p_ntf[21] = 0x01;
         p_ntf[22] = 0x01;
@@ -299,7 +299,7 @@ NFCSTATUS phNxpNciHal_process_ext_rsp (uint8_t *p_ntf, uint16_t *p_len)
         }
         if (p_ntf[p_ntf[2]+ 2] == 0x00)
         {
-            NXPLOG_NCIHAL_D ("> Going through workaround - data of ISO 15693");
+            NXPLOG_NCIHAL_D ("> Data of ISO-15693");
             p_ntf[2]--;
             (*p_len)--;
         }
@@ -322,7 +322,7 @@ NFCSTATUS phNxpNciHal_process_ext_rsp (uint8_t *p_ntf, uint16_t *p_len)
                 p_ntf[2] == 0x01 &&
                 p_ntf[3] == 0x06 )
     {
-        NXPLOG_NCIHAL_D ("> Deinit workaround for LLCP set_config 0x%x 0x%x 0x%x", p_ntf[21], p_ntf[22], p_ntf[23]);
+        NXPLOG_NCIHAL_D ("> Deinit for LLCP set_config 0x%x 0x%x 0x%x", p_ntf[21], p_ntf[22], p_ntf[23]);
         p_ntf[0] = 0x40;
         p_ntf[1] = 0x02;
         p_ntf[2] = 0x02;
@@ -339,19 +339,76 @@ NFCSTATUS phNxpNciHal_process_ext_rsp (uint8_t *p_ntf, uint16_t *p_len)
         iCoreInitRspLen = *p_len;
         memcpy(bCoreInitRsp, p_ntf, *p_len);
         NXPLOG_NCIHAL_D ("NxpNci> FW Version: %x.%x.%x", p_ntf[len-2], p_ntf[len-1], p_ntf[len]);
+        NXPLOG_NCIHAL_D ("NxpNci> Model id: %x", p_ntf[len-3]>>4);
+        /* Before FW version: 10.01.12, products are PN548c2(for model id = 0) and PN66T(for model id = 1)*/
+        if(p_ntf[len-2] == 0x10 )
+        {
+            if((p_ntf[len-1] < 0x01) |
+                (( p_ntf[len-1] == 0x01) && (p_ntf[len] <= 0x11)))
+            {
+                if(0x01 == (p_ntf[len-3]>>4))
+                {
+                    NXPLOG_NCIHAL_D ("NxpNci> Product: PN66T");
+                }
+                else
+                {
+                    NXPLOG_NCIHAL_D ("NxpNci> Product: PN548c2");
+                }
+            }
+            else
+            {   /* From FW version: 10.01.12, product names based on Hardware Version number */
+                switch(p_ntf[len-3])
+                {
+                    case 0x08:
+                        NXPLOG_NCIHAL_D ("NxpNci> Product: PN546");
+                        break;
+                    case 0x18:
+                        NXPLOG_NCIHAL_D ("NxpNci> Product: PN66T");
+                        break;
+                    case 0x28:
+                        NXPLOG_NCIHAL_D ("NxpNci> Product: PN548C2");
+                        break;
+                    case 0x38:
+                        NXPLOG_NCIHAL_D ("NxpNci> Product: PN66U");
+                        break;
+                    case 0x48:
+                        NXPLOG_NCIHAL_D ("NxpNci> Product: NQ210");
+                        break;
+                    case 0x58:
+                        NXPLOG_NCIHAL_D ("NxpNci> Product: NQ220");
+                        break;
+                    case 0x68:
+                        NXPLOG_NCIHAL_D ("NxpNci> Product: NPC300");
+                        break;
+                    case 0x78:
+                        NXPLOG_NCIHAL_D ("NxpNci> Product: NPC320");
+                        break;
+                    case 0x88:
+                        NXPLOG_NCIHAL_D ("NxpNci> Product: PN7150");
+                        break;
+                    case 0x98:
+                        NXPLOG_NCIHAL_D ("NxpNci> Product: PN548C3");
+                        break;
+                    default:
+                        NXPLOG_NCIHAL_D ("NxpNci> Product: Invalid");
+                }
+            }
+        }
+        else
+        {
+            /* Do Nothing */
+        }
     }
     //4200 02 00 01
     else if(p_ntf[0] == 0x42 && p_ntf[1] == 0x00 && ee_disc_done == 0x01)
     {
-        NXPLOG_NCIHAL_D("Going through workaround - NFCEE_DISCOVER_RSP");
+        NXPLOG_NCIHAL_D("As done with the NFCEE discovery so setting it to zero  - NFCEE_DISCOVER_RSP");
         if(p_ntf[4] == 0x01)
         {
             p_ntf[4] = 0x00;
 
             ee_disc_done = 0x00;
         }
-        NXPLOG_NCIHAL_D("Going through workaround - NFCEE_DISCOVER_RSP - END");
-
     }
     else if(p_ntf[0] == 0x61 && p_ntf[1] == 0x03 /*&& cleanup_timer!=0*/)
     {
@@ -390,7 +447,7 @@ NFCSTATUS phNxpNciHal_process_ext_rsp (uint8_t *p_ntf, uint16_t *p_len)
             && p_ntf[4] == 0x02 && p_ntf[5] == 0x80
             && p_ntf[6] == 0x00 )
     {
-        NXPLOG_NCIHAL_D("Going through workaround - iso-dep  interface  mifare protocol with sak value not equal to 0x20");
+        NXPLOG_NCIHAL_D("Going through the iso-dep interface mifare protocol with sak value not equal to 0x20");
         rf_technology_length_param = p_ntf[9];
         if((p_ntf[ 9 + rf_technology_length_param] & 0x20) != 0x20)
         {
@@ -619,8 +676,7 @@ NFCSTATUS phNxpNciHal_write_ext(uint16_t *cmd_len, uint8_t *p_cmd_data,
             p_cmd_data[4] == 0x01 &&
             p_cmd_data[5] == 0x03)
     {
-        NXPLOG_NCIHAL_D("> Going through workaround - set host list");
-
+        NXPLOG_NCIHAL_D("> Going through the set host list");
 #if(NFC_NXP_CHIP_TYPE != PN547C2)
         *cmd_len = 8;
 
@@ -633,8 +689,6 @@ NFCSTATUS phNxpNciHal_write_ext(uint16_t *cmd_len, uint8_t *p_cmd_data,
         p_cmd_data[2] = 0x04;
         p_cmd_data[6] = 0xC0;
 #endif
-
-        NXPLOG_NCIHAL_D("> Going through workaround - set host list - END");
         status = NFCSTATUS_SUCCESS;
     }
     else if(icode_detected)
@@ -697,9 +751,8 @@ NFCSTATUS phNxpNciHal_write_ext(uint16_t *cmd_len, uint8_t *p_cmd_data,
         p_cmd_data[11] = 0x50;
         p_cmd_data[12] = 0x00;
 
-        NXPLOG_NCIHAL_D ("> Going through workaround - Dirty Set Config ");
+        NXPLOG_NCIHAL_D ("> Dirty Set Config ");
 //        phNxpNciHal_print_packet("SEND", p_cmd_data, *cmd_len);
-        NXPLOG_NCIHAL_D ("> Going through workaround - Dirty Set Config - End ");
     }
 //    20020703300031003200
 //    2002 0301 3200
@@ -710,7 +763,7 @@ NFCSTATUS phNxpNciHal_write_ext(uint16_t *cmd_len, uint8_t *p_cmd_data,
             )
     )
     {
-        NXPLOG_NCIHAL_D ("> Going through workaround - Dirty Set Config ");
+        NXPLOG_NCIHAL_D ("> Dirty Set Config ");
         phNxpNciHal_print_packet("SEND", p_cmd_data, *cmd_len);
         *rsp_len = 5;
         p_rsp_data[0] = 0x40;
@@ -721,7 +774,6 @@ NFCSTATUS phNxpNciHal_write_ext(uint16_t *cmd_len, uint8_t *p_cmd_data,
 
         phNxpNciHal_print_packet("RECV", p_rsp_data, 5);
         status = NFCSTATUS_FAILED;
-        NXPLOG_NCIHAL_D ("> Going through workaround - Dirty Set Config - End ");
     }
 
     //2002 0D04 300104 310100 320100 500100
@@ -735,13 +787,12 @@ NFCSTATUS phNxpNciHal_write_ext(uint16_t *cmd_len, uint8_t *p_cmd_data,
     {
 //        p_cmd_data[12] = 0x40;
 
-        NXPLOG_NCIHAL_D ("> Going through workaround - Dirty Set Config ");
+        NXPLOG_NCIHAL_D ("> Dirty Set Config ");
         phNxpNciHal_print_packet("SEND", p_cmd_data, *cmd_len);
         p_cmd_data[6] = 0x60;
 
         phNxpNciHal_print_packet("RECV", p_rsp_data, 5);
 //        status = NFCSTATUS_FAILED;
-        NXPLOG_NCIHAL_D ("> Going through workaround - Dirty Set Config - End ");
     }
 
 #if 0
@@ -754,7 +805,7 @@ NFCSTATUS phNxpNciHal_write_ext(uint16_t *cmd_len, uint8_t *p_cmd_data,
                      (p_cmd_data[2] == 0x05 && p_cmd_data[3] == 0x02))
              )
     {
-        NXPLOG_NCIHAL_D ("> Going through workaround - Dirty Set Config ");
+        NXPLOG_NCIHAL_D ("> Dirty Set Config ");
         phNxpNciHal_print_packet("SEND", p_cmd_data, *cmd_len);
         *rsp_len = 5;
         p_rsp_data[0] = 0x40;
@@ -765,14 +816,13 @@ NFCSTATUS phNxpNciHal_write_ext(uint16_t *cmd_len, uint8_t *p_cmd_data,
 
         phNxpNciHal_print_packet("RECV", p_rsp_data, 5);
         status = NFCSTATUS_FAILED;
-        NXPLOG_NCIHAL_D ("> Going through workaround - Dirty Set Config - End ");
     }
 
     else if((p_cmd_data[0] == 0x20 && p_cmd_data[1] == 0x02) &&
            ((p_cmd_data[3] == 0x00) ||
            ((*cmd_len >= 0x06) && (p_cmd_data[5] == 0x00)))) /*If the length of the first param id is zero don't allow*/
     {
-        NXPLOG_NCIHAL_D ("> Going through workaround - Dirty Set Config ");
+        NXPLOG_NCIHAL_D ("> Dirty Set Config ");
         phNxpNciHal_print_packet("SEND", p_cmd_data, *cmd_len);
         *rsp_len = 5;
         p_rsp_data[0] = 0x40;
@@ -783,7 +833,6 @@ NFCSTATUS phNxpNciHal_write_ext(uint16_t *cmd_len, uint8_t *p_cmd_data,
 
         phNxpNciHal_print_packet("RECV", p_rsp_data, 5);
         status = NFCSTATUS_FAILED;
-        NXPLOG_NCIHAL_D ("> Going through workaround - Dirty Set Config - End ");
     }
 #endif
     else if ((wFwVerRsp & 0x0000FFFF) == wFwVer)

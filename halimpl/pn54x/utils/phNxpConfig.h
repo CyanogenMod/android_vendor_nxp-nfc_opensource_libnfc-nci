@@ -20,7 +20,7 @@
  *
  *  The original Work has been changed by NXP Semiconductors.
  *
- *  Copyright (C) 2013-2014 NXP Semiconductors
+ *  Copyright (C) 2015 NXP Semiconductors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -64,6 +64,8 @@ int updateNxpConfigTimestamp();
 
 #define NAME_MIFARE_READER_ENABLE    "MIFARE_READER_ENABLE"
 #define NAME_FW_STORAGE              "FW_STORAGE"
+#define NAME_NXP_NFC_DEV_NODE        "NXP_NFC_DEV_NODE"
+#define NAME_NXP_FW_NAME             "NXP_FW_NAME"
 #define NAME_NXP_FW_PROTECION_OVERRIDE "NXP_FW_PROTECION_OVERRIDE"
 #define NAME_NXP_SYS_CLK_SRC_SEL     "NXP_SYS_CLK_SRC_SEL"
 #define NAME_NXP_SYS_CLK_FREQ_SEL    "NXP_SYS_CLK_FREQ_SEL"
@@ -91,7 +93,8 @@ int updateNxpConfigTimestamp();
 #define NAME_NXP_NFC_MERGE_RF_PARAMS "NXP_NFC_MERGE_RF_PARAMS"
 #define NAME_NXP_I2C_FRAGMENTATION_ENABLED "NXP_I2C_FRAGMENTATION_ENABLED"
 #define NAME_AID_MATCHING_PLATFORM "AID_MATCHING_PLATFORM"
-
+#define NAME_NXP_TYPEA_UICC_BAUD_RATE "NXP_TYPEA_UICC_BAUD_RATE"
+#define NAME_NXP_TYPEB_UICC_BAUD_RATE "NXP_TYPEB_UICC_BAUD_RATE"
 
 /* default configuration */
 #define default_storage_location "/data/nfc"

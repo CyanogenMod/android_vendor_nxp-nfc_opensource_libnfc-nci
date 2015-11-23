@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2014 NXP Semiconductors
+ * Copyright (C) 2015 NXP Semiconductors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -183,6 +183,14 @@
 #define NFCSTATUS_NOT_ALLOWED                                 (0x003A)
 
 /*
+ * FW version error while performing FW download,
+ * FW major version mismatch (cannot downgrade FW major version) or FW version already upto date
+ * User may be trying to flash Mobile FW on top of Infra FW, which is not allowed
+ * Download appropriate version of FW
+ */
+#define NFCSTATUS_FW_VERSION_ERROR                            (0x003C)
+
+/*
  *  The system is busy with the previous operation.
  */
 #define NFCSTATUS_BUSY                                        (0x006F)
@@ -292,9 +300,24 @@
 /* No registry node matches the specified input data. */
 #define NFCSTATUS_NODE_NOT_FOUND                              (0x0017)
 
+#if(NFC_POWER_MANAGEMENT == TRUE)
+
+#define NFCSTATUS_SMX_SPI_STATE                               (0x00F0)
+
+/* The current module is free ; one might use it */
+#define NFCSTATUS_SMX_IDLE_STATE                              (0x00F1)
+
+/* The current module is busy with wired; one might use it */
+#define NFCSTATUS_SMX_WIRED_STATE                             (0x00F3)
+
+/* The current module is free ; one might use it */
+#define NFCSTATUS_NFCC_DWNLD_STATE                            (0x00F4)
+
+#else
 /* The current module is busy ; one might retry later */
 #define NFCSTATUS_SMX_BAD_STATE                               (0x00F0)
 
+#endif
 
 /* The Abort mechanism has failed for unexpected reason: user can try again*/
 #define NFCSTATUS_ABORT_FAILED                                (0x00F2)

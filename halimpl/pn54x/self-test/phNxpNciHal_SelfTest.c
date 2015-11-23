@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2014 NXP Semiconductors
+ * Copyright (C) 2015 NXP Semiconductors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 #include <phNxpLog.h>
 #include <pthread.h>
 #include <phOsalNfc_Timer.h>
+#include <phNxpConfig.h>
 
 #define HAL_WRITE_RSP_TIMEOUT   (2000)   /* Timeout value to wait for response from PN54X */
 #define HAL_WRITE_MAX_RETRY     (10)
@@ -1384,9 +1385,11 @@ NFCSTATUS phNxpNciHal_TestMode_open (void)
 
     phOsalNfc_Config_t tOsalConfig;
     phTmlNfc_Config_t tTmlConfig;
+    uint8_t *nfc_dev_node = NULL;
+    const uint16_t max_len = 260; /* device node name is max of 255 bytes + 5 bytes (/dev/) */
     NFCSTATUS status = NFCSTATUS_SUCCESS;
     uint16_t read_len = 255;
-
+    int8_t ret_val = 0x00;
     /* initialize trace level */
     phNxpLog_InitializeLogLevel();
 
@@ -1401,9 +1404,22 @@ NFCSTATUS phNxpNciHal_TestMode_open (void)
     memset(&tOsalConfig, 0x00, sizeof(tOsalConfig));
     memset(&tTmlConfig, 0x00, sizeof(tTmlConfig));
 
+    /* Read the nfc device node name */
+    nfc_dev_node = (uint8_t*) malloc(max_len*sizeof(uint8_t));
+    if(nfc_dev_node == NULL)
+    {
+        NXPLOG_NCIHAL_E("malloc of nfc_dev_node failed ");
+        goto clean_and_return;
+    }
+    else if (!GetNxpStrValue (NAME_NXP_NFC_DEV_NODE, nfc_dev_node, sizeof (nfc_dev_node)))
+    {
+        NXPLOG_NCIHAL_E("Invalid nfc device node name keeping the default device node /dev/pn544");
+        strcpy (nfc_dev_node, "/dev/pn544");
+    }
+
     gDrvCfg.nClientId = phDal4Nfc_msgget(0, 0600);
     gDrvCfg.nLinkType = ENUM_LINK_TYPE_I2C;/* For PN54X */
-    tTmlConfig.pDevName = (int8_t *) "/dev/pn54x";
+    tTmlConfig.pDevName = (uint8_t *) nfc_dev_node;
     tOsalConfig.dwCallbackThreadId = (uintptr_t) gDrvCfg.nClientId;
     tOsalConfig.pLogFile = NULL;
     tTmlConfig.dwGetMsgThreadId = (uintptr_t) gDrvCfg.nClientId;
@@ -1416,12 +1432,22 @@ NFCSTATUS phNxpNciHal_TestMode_open (void)
         NXPLOG_NCIHAL_E("phTmlNfc_Init Failed");
         goto clean_and_return;
     }
+    else
+    {
+        if(nfc_dev_node != NULL)
+        {
+            free(nfc_dev_node);
+            nfc_dev_node = NULL;
+        }
+    }
 
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-    if (pthread_create(&test_rx_thread, &attr,
-            phNxpNciHal_test_rx_thread, NULL) != 0)
+    ret_val = pthread_create(&test_rx_thread, &attr,
+            phNxpNciHal_test_rx_thread, NULL);
+    pthread_attr_destroy(&attr);
+    if (ret_val != 0)
     {
         NXPLOG_NCIHAL_E("pthread_create failed");
         phTmlNfc_Shutdown();
@@ -1444,6 +1470,11 @@ NFCSTATUS phNxpNciHal_TestMode_open (void)
 
 clean_and_return:
     CONCURRENCY_UNLOCK();
+    if(nfc_dev_node != NULL)
+    {
+        free(nfc_dev_node);
+        nfc_dev_node = NULL;
+    }
     phNxpNciHal_cleanup_monitor();
     return NFCSTATUS_FAILED;
 }

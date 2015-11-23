@@ -587,4 +587,3 @@ static UINT8 *ndef_get_bt_oob_record (UINT8 *p_msg, UINT32 max_size, UINT32 *p_c
 
     return (p_rec);
 }
-

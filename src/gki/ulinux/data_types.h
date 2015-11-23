@@ -68,4 +68,3 @@ typedef unsigned char   UBYTE;
 #define BCM_VSPRINTF_S(x1,x2,x3,x4) vsprintf((x1),(x3),(x4))
 
 #endif
-

@@ -15,6 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 #ifndef __BUILDCFG_H
 #define __BUILDCFG_H
 #include <string.h>
@@ -37,7 +56,11 @@
 
 #define GKI_BUF1_MAX            0
 // 2 is in use
+#if (NXP_EXTNS == TRUE)
+#define GKI_BUF3_MAX            70
+#else
 #define GKI_BUF3_MAX            30
+#endif
 #define GKI_BUF4_SIZE           2400
 #define GKI_BUF4_MAX            30
 #define GKI_BUF5_MAX            0
@@ -46,15 +69,23 @@
 #define GKI_BUF8_MAX            0
 
 #define GKI_BUF2_SIZE           660
+#if (NXP_EXTNS == TRUE)
+#define GKI_BUF2_MAX            70
+#else
 #define GKI_BUF2_MAX            50
+#endif
 
 #define GKI_BUF0_SIZE           268
 #define GKI_BUF0_MAX            40
 
 #define NCI_BUF_POOL_ID         GKI_POOL_ID_0
+#if (NXP_EXTNS == TRUE)
+#define GKI_NUM_FIXED_BUF_POOLS 9
+#else
 #define GKI_NUM_FIXED_BUF_POOLS 4
+#endif
 
-#ifdef	__cplusplus
+#ifdef  __cplusplus
 extern "C" {
 #endif
 // +++from bte.h...
@@ -64,7 +95,7 @@ enum
                             /* J3   J4              SW3-3   SW3-2   SW3-1   */
                             /* -------------------------------------------- */
     BTE_MODE_SERIAL_APP,    /* OUT  OUT             OFF     OFF     OFF     Sample serial port application      */
-    BTE_MODE_APPL,    	    /* IN   OUT             OFF     OFF     ON      Target used with Tester through RPC */
+    BTE_MODE_APPL,          /* IN   OUT             OFF     OFF     ON      Target used with Tester through RPC */
     BTE_MODE_RESERVED,      /* OUT  IN              OFF     ON      OFF     Reserved                            */
     BTE_MODE_SAMPLE_APPS,   /* IN   IN              OFF     ON      ON      Sample applications (ICP/HSP)       */
     BTE_MODE_DONGLE,        /* not yet supported    ON      OFF     OFF     Dongle mode                         */
@@ -100,7 +131,7 @@ void    _ftime (struct _timeb*);
 
 #endif
 
-#ifdef	__cplusplus
+#ifdef  __cplusplus
 };
 #endif
 #endif

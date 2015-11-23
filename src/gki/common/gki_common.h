@@ -15,6 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 #ifndef GKI_COMMON_H
 #define GKI_COMMON_H
 
@@ -22,7 +41,7 @@
 #include "dyn_mem.h"
 
 #ifndef GKI_DEBUG
-#define GKI_DEBUG	FALSE
+#define GKI_DEBUG   FALSE
 #endif
 
 /* Task States: (For OSRdyTbl) */
@@ -90,7 +109,11 @@ typedef struct _free_queue
 
 /* Buffer related defines
 */
+#if(NXP_EXTNS == TRUE)
+#define ALIGN_POOL(pl_size)  ( (((pl_size) + (sizeof(UINT32)-1)) / sizeof(UINT32)) * sizeof(UINT32))
+#else
 #define ALIGN_POOL(pl_size)  ( (((pl_size) + 3) / sizeof(UINT32)) * sizeof(UINT32))
+#endif
 #define BUFFER_HDR_SIZE     (sizeof(BUFFER_HDR_T))                  /* Offset past header */
 #define BUFFER_PADDING_SIZE (sizeof(BUFFER_HDR_T) + sizeof(UINT32)) /* Header + Magic Number */
 #define MAX_USER_BUF_SIZE   ((UINT16)0xffff - BUFFER_PADDING_SIZE)  /* pool size must allow for header */
@@ -359,8 +382,8 @@ extern void      gki_timers_init(void);
 extern void      gki_adjust_timer_count (INT32);
 
 extern void    OSStartRdy(void);
-extern void	   OSCtxSw(void);
-extern void	   OSIntCtxSw(void);
+extern void    OSCtxSw(void);
+extern void    OSIntCtxSw(void);
 extern void    OSSched(void);
 extern void    OSIntEnter(void);
 extern void    OSIntExit(void);

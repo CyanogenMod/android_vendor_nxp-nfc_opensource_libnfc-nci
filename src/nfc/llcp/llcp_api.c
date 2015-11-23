@@ -16,6 +16,25 @@
  *
  ******************************************************************************/
 
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 /******************************************************************************
  *
@@ -62,6 +81,25 @@ void LLCP_SetTestParams (UINT8 version, UINT16 wks)
 }
 #endif
 
+#if(NXP_EXTNS == TRUE)
+/*******************************************************************************
+**
+** Function         LLCP_RegisterDtaCback
+**
+** Description      Register callback function for LLCP DTA testing
+**
+**
+** Returns          void
+**
+*******************************************************************************/
+void LLCP_RegisterDtaCback (tLLCP_DTA_CBACK *p_dta_cback)
+{
+    LLCP_TRACE_API0 ("LLCP_RegisterDtaCback ()");
+
+    llcp_cb.p_dta_cback = p_dta_cback;
+}
+#endif
+
 /*******************************************************************************
 **
 ** Function         LLCP_SetConfig
@@ -76,7 +114,7 @@ void LLCP_SetTestParams (UINT8 version, UINT16 wks)
 **                  - Delay SYMM response
 **                  - Data link connection timeout
 **                  - Delay timeout to send first PDU as initiator
-**
+**                  - firmware start symmetry
 ** Returns          void
 **
 *******************************************************************************/
@@ -158,7 +196,7 @@ void LLCP_SetConfig (UINT16 link_miu,
 **                  - Delay SYMM response
 **                  - Data link connection timeout
 **                  - Delay timeout to send first PDU as initiator
-**
+**                  - Firmware start symmetry
 ** Returns          void
 **
 *******************************************************************************/
@@ -1646,4 +1684,3 @@ tLLCP_STATUS LLCP_DiscoverService (char            *p_name,
 
     return LLCP_STATUS_FAIL;
 }
-

@@ -15,6 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 
 /******************************************************************************
@@ -1749,6 +1768,10 @@ static void rw_t3t_handle_ndef_detect_poll_rsp (tRW_T3T_CB *p_cb, UINT8 nci_stat
             /* Add CHECK opcode to message  */
             UINT8_TO_STREAM (p, T3T_MSG_OPC_CHECK_CMD);
 
+#if(NXP_EXTNS == TRUE)
+            /* Update NFCID2 using SENSF_RES */
+            memcpy (p_cb->peer_nfcid2, (p_sensf_res_buf + NCI_SENSF_RES_OFFSET_NFCID2), NCI_NFCID2_LEN);
+#endif
             /* Add IDm to message */
             ARRAY_TO_STREAM (p, p_cb->peer_nfcid2, NCI_NFCID2_LEN);
 
@@ -2368,6 +2391,15 @@ void rw_t3t_conn_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_data)
         {
             rw_t3t_data_cback (conn_id, &(p_data->data));
             break;
+        }
+        else
+        {
+            RW_TRACE_DEBUG2 ("rw_t3t_conn_cback: p_data->data.p_data=0x%X p_data->data.status=0x%02x", p_data->data.p_data, p_data->data.status);
+            if(p_data->data.p_data)
+            {
+                GKI_freebuf(p_data->data.p_data);
+                p_data->data.p_data = NULL;
+            }
         }
         /* Data event with error status...fall through to NFC_ERROR_CEVT case */
 

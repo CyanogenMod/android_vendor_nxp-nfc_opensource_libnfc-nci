@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2014 NXP Semiconductors
+ * Copyright (C) 2015 NXP Semiconductors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ typedef struct
 int phNxpNciHal_open(nfc_stack_callback_t *p_cback,
         nfc_stack_data_callback_t *p_data_cback);
 int phNxpNciHal_write(uint16_t data_len, const uint8_t *p_data);
+int phNxpNciHal_ioctl(long arg, void *p_data);
 int phNxpNciHal_core_initialized(uint8_t* p_core_init_rsp_params);
 int phNxpNciHal_pre_discover(void);
 int phNxpNciHal_close(void);

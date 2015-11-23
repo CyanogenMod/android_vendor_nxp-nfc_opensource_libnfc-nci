@@ -20,7 +20,7 @@
  *
  *  The original Work has been changed by NXP Semiconductors.
  *
- *  Copyright (C) 2013-2014 NXP Semiconductors
+ *  Copyright (C) 2015 NXP Semiconductors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -36,13 +36,13 @@
  *
  ******************************************************************************/
 
+#include <phNxpConfig.h>
+#include <stdio.h>
 #include <string>
 #include <vector>
 #include <list>
-#include <stdio.h>
 #include <sys/stat.h>
 
-#include <phNxpConfig.h>
 #include <phNxpLog.h>
 
 #if GENERIC_TARGET
@@ -65,6 +65,8 @@ const char transport_config_path[] = "res/";
 const char config_timestamp_path[] = "/data/nfc/libnfc-nxpConfigState.bin";
 
 using namespace::std;
+
+namespace nxp {
 
 class CNfcParam : public string
 {
@@ -871,6 +873,29 @@ CNfcParam::CNfcParam(const char* name,  unsigned long value) :
 
 /*******************************************************************************
 **
+** Function:    readOptionalConfig()
+**
+** Description: read Config settings from an optional conf file
+**
+** Returns:     none
+**
+*******************************************************************************/
+void readOptionalConfig(const char* extra)
+{
+    string strPath;
+    strPath.assign(transport_config_path);
+    if (alternative_config_path[0] != '\0')
+        strPath.assign(alternative_config_path);
+
+    strPath += extra_config_base;
+    strPath += extra;
+    strPath += extra_config_ext;
+    CNfcConfig::GetInstance().readConfig(strPath.c_str(), false);
+}
+
+} // namespace nxp
+/*******************************************************************************
+**
 ** Function:    GetStrValue
 **
 ** Description: API function for getting a string value of a setting
@@ -880,7 +905,7 @@ CNfcParam::CNfcParam(const char* name,  unsigned long value) :
 *******************************************************************************/
 extern "C" int GetNxpStrValue(const char* name, char* pValue, unsigned long len)
 {
-    CNfcConfig& rConfig = CNfcConfig::GetInstance();
+    nxp::CNfcConfig& rConfig = nxp::CNfcConfig::GetInstance();
 
     return rConfig.getValue(name, pValue, len);
 }
@@ -903,7 +928,7 @@ extern "C" int GetNxpStrValue(const char* name, char* pValue, unsigned long len)
 *******************************************************************************/
 extern "C" int GetNxpByteArrayValue(const char* name, char* pValue,long bufflen, long *len)
 {
-    CNfcConfig& rConfig = CNfcConfig::GetInstance();
+    nxp::CNfcConfig& rConfig = nxp::CNfcConfig::GetInstance();
 
     return rConfig.getValue(name, pValue, bufflen,len);
 }
@@ -922,8 +947,8 @@ extern "C" int GetNxpNumValue(const char* name, void* pValue, unsigned long len)
     if (!pValue)
         return false;
 
-    CNfcConfig& rConfig = CNfcConfig::GetInstance();
-    const CNfcParam* pParam = rConfig.find(name);
+    nxp::CNfcConfig& rConfig = nxp::CNfcConfig::GetInstance();
+    const nxp::CNfcParam* pParam = rConfig.find(name);
 
     if (pParam == NULL)
         return false;
@@ -966,31 +991,9 @@ extern "C" int GetNxpNumValue(const char* name, void* pValue, unsigned long len)
 extern "C" void resetNxpConfig()
 
 {
-    CNfcConfig& rConfig = CNfcConfig::GetInstance();
+    nxp::CNfcConfig& rConfig = nxp::CNfcConfig::GetInstance();
 
     rConfig.clean();
-}
-
-/*******************************************************************************
-**
-** Function:    readOptionalConfig()
-**
-** Description: read Config settings from an optional conf file
-**
-** Returns:     none
-**
-*******************************************************************************/
-void readOptionalConfig(const char* extra)
-{
-    string strPath;
-    strPath.assign(transport_config_path);
-    if (alternative_config_path[0] != '\0')
-        strPath.assign(alternative_config_path);
-
-    strPath += extra_config_base;
-    strPath += extra;
-    strPath += extra_config_ext;
-    CNfcConfig::GetInstance().readConfig(strPath.c_str(), false);
 }
 
 /*******************************************************************************
@@ -1004,7 +1007,7 @@ void readOptionalConfig(const char* extra)
 *******************************************************************************/
 extern "C" int isNxpConfigModified()
 {
-    CNfcConfig& rConfig = CNfcConfig::GetInstance();
+    nxp::CNfcConfig& rConfig = nxp::CNfcConfig::GetInstance();
     return rConfig.checkTimestamp();
 }
 
@@ -1019,6 +1022,6 @@ extern "C" int isNxpConfigModified()
 *******************************************************************************/
 extern "C" int updateNxpConfigTimestamp()
 {
-    CNfcConfig& rConfig = CNfcConfig::GetInstance();
+    nxp::CNfcConfig& rConfig = nxp::CNfcConfig::GetInstance();
     return rConfig.updateTimestamp();
 }

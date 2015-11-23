@@ -90,4 +90,3 @@ void nfc_hal_nv_ci_read (UINT16                  num_bytes_read,
 #endif /* NFC_HAL_HCI_INCLUDED */
 
 #endif /* NFC_HAL_NV_CI_H */
-

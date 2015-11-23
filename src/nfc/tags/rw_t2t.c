@@ -16,6 +16,25 @@
  *
  ******************************************************************************/
 
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 /******************************************************************************
  *
@@ -191,6 +210,15 @@ static void rw_t2t_proc_data (UINT8 conn_id, tNFC_DATA_CEVT *p_data)
             {
                 p_t2t->b_read_hdr = TRUE;
                 memcpy (p_t2t->tag_hdr,  p, T2T_READ_DATA_LEN);
+#if(NXP_EXTNS == TRUE)
+                /* On Ultralight - C tag, if CC is corrupt, correct it */
+                if (  (p_t2t->tag_hdr[0] == TAG_MIFARE_MID)
+                    &&(p_t2t->tag_hdr[T2T_CC2_TMS_BYTE] >= T2T_INVALID_CC_TMS_VAL0)
+                    &&(p_t2t->tag_hdr[T2T_CC2_TMS_BYTE] <= T2T_INVALID_CC_TMS_VAL1)  )
+                {
+                    p_t2t->tag_hdr[T2T_CC2_TMS_BYTE] = T2T_CC2_TMS_MULC;
+                }
+#endif
             }
             break;
 
@@ -346,6 +374,12 @@ void rw_t2t_conn_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_data)
         {
             rw_t2t_process_error ();
         }
+#if(NXP_EXTNS == TRUE)
+        /* Free the response buffer in case of invalid response*/
+        if (p_data != NULL) {
+                GKI_freebuf((BT_HDR *) (p_data->data.p_data));
+        }
+#endif
         break;
 
     default:

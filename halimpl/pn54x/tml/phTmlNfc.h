@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2014 NXP Semiconductors
+ * Copyright (C) 2015 NXP Semiconductors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -99,7 +99,13 @@ typedef enum
     phTmlNfc_e_Invalid = 0,
     phTmlNfc_e_ResetDevice = PH_TMLNFC_RESETDEVICE, /* Reset the device */
     phTmlNfc_e_EnableDownloadMode, /* Do the hardware setting to enter into download mode */
-    phTmlNfc_e_EnableNormalMode /* Hardware setting for normal mode of operation */
+    phTmlNfc_e_EnableNormalMode/* Hardware setting for normal mode of operation */
+#if(NFC_POWER_MANAGEMENT == TRUE)
+    ,phTmlNfc_e_SetNfcServicePid, /* Register the Nfc service PID with the driver */
+    phTmlNfc_e_GetP61PwrMode, /* Get the current P61 mode of operation */
+    phTmlNfc_e_SetP61WiredMode, /* Set the current P61 mode of operation to Wired*/
+    phTmlNfc_e_SetP61IdleMode /* Set the current P61 mode of operation to Idle*/
+#endif
 } phTmlNfc_ControlCode_t ;  /* Control code for IOCTL call */
 
 /*

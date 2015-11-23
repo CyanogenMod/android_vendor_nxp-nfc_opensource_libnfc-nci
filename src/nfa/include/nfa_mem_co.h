@@ -72,4 +72,3 @@ NFC_API extern void nfa_mem_co_free (void *p_buf);
 #endif
 
 #endif /* NFA_MEM_CO_H */
-

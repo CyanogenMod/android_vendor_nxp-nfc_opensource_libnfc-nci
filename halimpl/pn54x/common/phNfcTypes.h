@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2014 NXP Semiconductors
+ * Copyright (C) 2015 NXP Semiconductors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -296,7 +296,17 @@ typedef struct phNfc_sTransceiveInfo
                                                  */
     uint8_t                        bWordCount;   /* Number of words to be read or written */
 }phNfc_sTransceiveInfo_t;
-
+#if((NFC_POWER_MANAGEMENT == TRUE)&&(NXP_EXTNS == TRUE))
+typedef enum p61_access_state{
+    P61_STATE_INVALID = 0x0000,
+    P61_STATE_IDLE = 0x0100, /* p61 is free to use */
+    P61_STATE_WIRED = 0x0200,  /* p61 is being accessed by DWP (NFCC)*/
+    P61_STATE_SPI = 0x0400, /* P61 is being accessed by SPI */
+    P61_STATE_DWNLD = 0x0800, /* NFCC fw download is in progress */
+    P61_STATE_SPI_PRIO = 0x1000, /*Start of p61 access by SPI on priority*/
+    P61_STATE_SPI_PRIO_END = 0x2000, /*End of p61 access by SPI on priority*/
+}p61_access_state_t;
+#endif
 #define UNUSED(X) (void)X;
 
 #endif /* PHNFCTYPES_H */

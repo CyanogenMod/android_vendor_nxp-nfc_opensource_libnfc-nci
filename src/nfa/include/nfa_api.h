@@ -15,7 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 /******************************************************************************
  *
@@ -104,12 +122,12 @@ typedef UINT16 tNFA_HANDLE;
 typedef UINT8 tNFA_PMID;
 
 /* Definitions for tNFA_TECHNOLOGY_MASK */
-#define NFA_TECHNOLOGY_MASK_A	        0x01    /* NFC Technology A             */
-#define NFA_TECHNOLOGY_MASK_B	        0x02    /* NFC Technology B             */
-#define NFA_TECHNOLOGY_MASK_F	        0x04    /* NFC Technology F             */
-#define NFA_TECHNOLOGY_MASK_ISO15693	0x08    /* Proprietary Technology       */
-#define NFA_TECHNOLOGY_MASK_B_PRIME	    0x10    /* Proprietary Technology       */
-#define NFA_TECHNOLOGY_MASK_KOVIO	    0x20    /* Proprietary Technology       */
+#define NFA_TECHNOLOGY_MASK_A           0x01    /* NFC Technology A             */
+#define NFA_TECHNOLOGY_MASK_B           0x02    /* NFC Technology B             */
+#define NFA_TECHNOLOGY_MASK_F           0x04    /* NFC Technology F             */
+#define NFA_TECHNOLOGY_MASK_ISO15693    0x08    /* Proprietary Technology       */
+#define NFA_TECHNOLOGY_MASK_B_PRIME     0x10    /* Proprietary Technology       */
+#define NFA_TECHNOLOGY_MASK_KOVIO       0x20    /* Proprietary Technology       */
 #define NFA_TECHNOLOGY_MASK_A_ACTIVE    0x40    /* NFC Technology A active mode */
 #define NFA_TECHNOLOGY_MASK_F_ACTIVE    0x80    /* NFC Technology F active mode */
 #define NFA_TECHNOLOGY_MASK_ALL         0xFF    /* All supported technologies   */
@@ -124,6 +142,10 @@ typedef UINT8 tNFA_TECHNOLOGY_MASK;
 #define NFA_PROTOCOL_ISO15693   NFC_PROTOCOL_15693
 #define NFA_PROTOCOL_B_PRIME    NFC_PROTOCOL_B_PRIME
 #define NFA_PROTOCOL_KOVIO      NFC_PROTOCOL_KOVIO
+#if (NXP_EXTNS == TRUE)
+#define NFA_PROTOCOL_MIFARE     NFC_PROTOCOL_MIFARE
+#define NFA_PROTOCOL_T3BT       NFC_PROTOCOL_T3BT
+#endif
 #define NFA_PROTOCOL_INVALID    0xFF
 #define NFA_MAX_NUM_PROTOCOLS   8
 typedef UINT8 tNFA_NFC_PROTOCOL;
@@ -134,6 +156,9 @@ typedef UINT8 tNFA_NFC_PROTOCOL;
 #define NFA_PROTOCOL_MASK_T3T       0x04    /* FeliCa / Type 3 tag */
 #define NFA_PROTOCOL_MASK_ISO_DEP   0x08    /* ISODEP/4A,4B        */
 #define NFA_PROTOCOL_MASK_NFC_DEP   0x10    /* NFCDEP/LLCP         */
+#if(NXP_EXTNS == TRUE)
+#define NFC_PROTOCOL_MASK_ISO7816   0x20    /*ISO 7816 - Aid Default Route */
+#endif
 typedef UINT8 tNFA_PROTOCOL_MASK;
 
 
@@ -143,9 +168,19 @@ typedef UINT8 tNFA_PROTOCOL_MASK;
 #define NFA_DM_SET_CONFIG_EVT           2   /* Result of NFA_SetConfig          */
 #define NFA_DM_GET_CONFIG_EVT           3   /* Result of NFA_GetConfig          */
 #define NFA_DM_PWR_MODE_CHANGE_EVT      4   /* Result of NFA_PowerOffSleepMode  */
-#define NFA_DM_RF_FIELD_EVT	            5   /* Status of RF Field               */
+#define NFA_DM_RF_FIELD_EVT             5   /* Status of RF Field               */
 #define NFA_DM_NFCC_TIMEOUT_EVT         6   /* NFCC is not responding           */
 #define NFA_DM_NFCC_TRANSPORT_ERR_EVT   7   /* NCI Tranport error               */
+#if(NXP_EXTNS == TRUE)
+#define NFA_DM_EMVCO_PCD_COLLISION_EVT  8   /* Collision event in case of EMV-CO Profile (Nxp)*/
+#define NFA_DM_SET_ROUTE_CONFIG_REVT    9   /* Status of EE Route config CMD (Nxp)*/
+#define NFA_DM_GET_ROUTE_CONFIG_REVT    10  /* Result of NFA_GetRouting         */
+/* Reader over SWP Events*/
+#define NFA_RD_SWP_READER_REQUESTED     0
+#define NFA_RD_SWP_READER_START         1
+#define NFA_RD_SWP_READER_STOP          2
+#define NFA_RD_SWP_READER_START_FAIL    3
+#endif
 
 #define NFA_T1T_HR_LEN              T1T_HR_LEN      /* T1T HR length            */
 #define NFA_MAX_UID_LEN             TAG_MAX_UID_LEN /* Max UID length of T1/T2  */
@@ -180,6 +215,17 @@ typedef struct
     UINT8 param_tlvs[1];    /* TLV (Parameter ID-Len-Value byte stream) */
 } tNFA_GET_CONFIG;
 
+#if(NXP_EXTNS == TRUE)
+/* Data for NFA_DM_GET_ROUTING_EVT */
+typedef struct
+{
+    tNFA_STATUS status;     /* NFA_STATUS_OK if successful              */
+    UINT8   num_tlvs;       /* number of TLVs                           */
+    UINT8   tlv_size;       /* the total len of all TLVs                */
+    UINT8 param_tlvs[150];  /* TLV (Parameter ID-Len-Value byte stream) */
+} tNFA_GET_ROUTING;
+#endif
+
 #define NFA_DM_PWR_MODE_FULL        0x04
 #define NFA_DM_PWR_MODE_OFF_SLEEP   0x00
 
@@ -208,6 +254,9 @@ typedef union
     tNFA_STATUS             status;         /* NFA_DM_ENABLE_EVT        */
     tNFA_SET_CONFIG         set_config;     /* NFA_DM_SET_CONFIG_EVT    */
     tNFA_GET_CONFIG         get_config;     /* NFA_DM_GET_CONFIG_EVT    */
+#if(NXP_EXTNS == TRUE)
+    tNFA_GET_ROUTING        get_routing;    /* NFA_DM_GET_ROUTING_EVT    */
+#endif
     tNFA_DM_PWR_MODE_CHANGE power_mode;     /* NFA_DM_PWR_MODE_CHANGE_EVT   */
     tNFA_DM_RF_FIELD        rf_field;       /* NFA_DM_RF_FIELD_EVT      */
     void                    *p_vs_evt_data; /* Vendor-specific evt data */
@@ -216,6 +265,22 @@ typedef union
 /* NFA_DM callback */
 typedef void (tNFA_DM_CBACK) (UINT8 event, tNFA_DM_CBACK_DATA *p_data);
 
+#if(NXP_EXTNS == TRUE)
+/* NFA Enable DTA Type Mode */
+typedef enum
+{
+    NFA_DTA_DEFAULT_MODE=0,
+    NFA_DTA_LLCP_MODE,
+    NFA_DTA_SNEP_MODE
+}tNFA_eDtaModes;
+typedef struct
+{
+    UINT8 validation; /* indicates on which platform validation is done like pn547, pn548, pn65T, pn66T */
+    UINT8 android_version; /* Nxp's android version */
+    UINT8 major_version; /* Major Version of MW*/
+    UINT8 minor_version; /* Minor Version of Mw */
+}tNFA_MW_VERSION;
+#endif
 
 /* NFA Connection Callback Events */
 #define NFA_POLL_ENABLED_EVT                    0   /* Polling enabled event                        */
@@ -258,6 +323,11 @@ typedef void (tNFA_DM_CBACK) (UINT8 event, tNFA_DM_CBACK_DATA *p_data);
 #define NFA_LISTEN_DISABLED_EVT                 37  /* Listening disabled event                     */
 #define NFA_P2P_PAUSED_EVT                      38  /* P2P services paused event                    */
 #define NFA_P2P_RESUMED_EVT                     39  /* P2P services resumed event                   */
+#if(NXP_EXTNS == TRUE)
+#define NFA_CE_ESE_LISTEN_CONFIGURED_EVT        40  /* ESE Listen configured                        */
+#define NFA_ACTIVATED_UPDATE_EVT                41  /* Activated intf for updating the   tech variables */
+#define NFA_RECOVERY_EVT                        42  /*Recovery*/
+#endif
 
 /* NFC deactivation type */
 #define NFA_DEACTIVATE_TYPE_IDLE        NFC_DEACTIVATE_TYPE_IDLE
@@ -269,7 +339,7 @@ typedef UINT8   tNFA_DEACTIVATE_TYPE;
 /* Data for NFA_DISC_RESULT_EVT */
 typedef struct
 {
-    tNFA_STATUS	        status;         /* NFA_STATUS_OK if successful       */
+    tNFA_STATUS         status;         /* NFA_STATUS_OK if successful       */
     tNFC_RESULT_DEVT    discovery_ntf;  /* RF discovery notification details */
 } tNFA_DISC_RESULT;
 
@@ -595,6 +665,9 @@ typedef tNFC_RF_COMM_PARAMS tNFA_RF_COMM_PARAMS;
 #define NFA_INTERFACE_FRAME         NFC_INTERFACE_FRAME
 #define NFA_INTERFACE_ISO_DEP       NFC_INTERFACE_ISO_DEP
 #define NFA_INTERFACE_NFC_DEP       NFC_INTERFACE_NFC_DEP
+#if (NXP_EXTNS == TRUE)
+#define NFA_INTERFACE_MIFARE        NFC_INTERFACE_MIFARE
+#endif
 typedef tNFC_INTF_TYPE tNFA_INTF_TYPE;
 
 /*******************************************************************************
@@ -607,10 +680,10 @@ typedef tNFC_INTF_TYPE tNFA_INTF_TYPE;
 #define NFA_TNF_RFC2046_MEDIA   NDEF_TNF_MEDIA      /* Media-type as defined in RFC 2046 [RFC 2046]     */
 #define NFA_TNF_RFC3986_URI     NDEF_TNF_URI        /* Absolute URI as defined in RFC 3986 [RFC 3986]   */
 #define NFA_TNF_EXTERNAL        NDEF_TNF_EXT        /* NFC Forum external type [NFC RTD]                */
-#define NFA_TNF_UNKNOWN	        NDEF_TNF_UNKNOWN    /* Unknown                                          */
+#define NFA_TNF_UNKNOWN         NDEF_TNF_UNKNOWN    /* Unknown                                          */
 #define NFA_TNF_UNCHANGED       NDEF_TNF_UNCHANGED  /* Unchanged                                        */
 #define NFA_TNF_RESERVED        NDEF_TNF_RESERVED   /* Reserved                                         */
-#define NFA_TNF_DEFAULT	        0xFF                /* Used to register default NDEF type handler       */
+#define NFA_TNF_DEFAULT         0xFF                /* Used to register default NDEF type handler       */
 typedef UINT8 tNFA_TNF;
 
 /* Definitions for tNFA_NDEF_URI_ID (Frequently used prefixes. For additional values, see [NFC RTD URI] */
@@ -626,7 +699,7 @@ typedef UINT8 tNFA_NDEF_URI_ID;
 
 /* Events for tNFA_NDEF_CBACK */
 #define NFA_NDEF_REGISTER_EVT   0   /* NDEF record type registered. (In response to NFA_RegisterNDefTypeHandler)    */
-#define NFA_NDEF_DATA_EVT	    1   /* Received an NDEF message with the registered type. See [tNFA_NDEF_DATA]       */
+#define NFA_NDEF_DATA_EVT       1   /* Received an NDEF message with the registered type. See [tNFA_NDEF_DATA]       */
 typedef UINT8 tNFA_NDEF_EVT;
 
 /* Structure for NFA_NDEF_REGISTER_EVT event data */
@@ -1231,6 +1304,29 @@ NFC_API extern tNFA_STATUS NFA_SendVsCommand (UINT8            oid,
                                               UINT8            *p_cmd_params,
                                               tNFA_VSC_CBACK   *p_cback);
 
+#if(NXP_EXTNS == TRUE)
+/*******************************************************************************
+**
+** Function         NFA_SendNxpNciCommand
+**
+** Description      This function is called to send NXP NCI Vendor Specific
+**                  command to NFCC.
+**
+**                  cmd_params_len  - The command parameter len
+**                  p_cmd_params    - The command parameter
+**                  p_cback         - The callback function to receive the command
+**
+** Returns          NFA_STATUS_OK if successfully initiated
+**                  NFA_STATUS_FAILED otherwise
+**
+*******************************************************************************/
+
+NFC_API extern tNFA_STATUS NFA_SendNxpNciCommand (UINT8            cmd_params_len,
+                                                  UINT8            *p_cmd_params,
+                                                  tNFA_VSC_CBACK   *p_cback);
+
+#endif
+
 /*******************************************************************************
 **
 ** Function         NFA_SetTraceLevel
@@ -1243,10 +1339,50 @@ NFC_API extern tNFA_STATUS NFA_SendVsCommand (UINT8            oid,
 *******************************************************************************/
 NFC_API extern UINT8 NFA_SetTraceLevel (UINT8 new_level);
 
+/*******************************************************************************
+**
+** Function:        NFA_EnableDTA_TypeMode
+**
+** Description:     Initialize and get global DTA type mode from .conf
+**
+** Returns:         none:
+**
+*******************************************************************************/
+#if(NXP_EXTNS == TRUE)
+/*******************************************************************************
+**
+** Function         NFA_SetReaderMode
+**
+** Description:
+**      This function enable/disable  reader mode. In reader mode, even though if
+**      P2P & CE from UICC is detected, Priority will be given to TypeF UICC read.
+**      Its currently implemented for TypeF
+**
+**      ReaderModeFlag - Enable/Disable Reader Mode
+**      Technologies   - Type of technologies to be set for Reader mode
+**                       Currently not used and reader mode is enabled for TypeF Only
+**
+** Returns:
+**      void
+*******************************************************************************/
+NFC_API extern void NFA_SetReaderMode (BOOLEAN ReaderModeFlag, UINT32 Technologies);
 
+NFC_API extern void  NFA_EnableDtamode (tNFA_eDtaModes eDtaMode);
+
+/*******************************************************************************
+**
+** Function:        NFA_GetMwVersion
+**
+** Description:     This function gets the Middleware Version
+**
+** Returns:         First 8 bit Major Version
+**                  Last 8 bit Minor Version
+**
+*******************************************************************************/
+NFC_API extern tNFA_MW_VERSION NFA_GetMwVersion ();
+#endif
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* NFA_API_H */
-

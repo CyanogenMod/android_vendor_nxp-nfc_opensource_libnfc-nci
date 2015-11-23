@@ -15,7 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 /******************************************************************************
  *
@@ -877,6 +895,13 @@ void llcp_dlc_proc_i_pdu (UINT8 dsap, UINT8 ssap, UINT16 i_pdu_length, UINT8 *p_
     {
         error_flags = 0;
 
+        if((p_msg == NULL) && (p_i_pdu == NULL))
+        {
+            LLCP_TRACE_ERROR0 ("llcp_dlc_proc_i_pdu (): Both p_msg and p_i_pdu are NULL");
+            /* Frame reject cannot be sent in this case, as we don't have sequence number */
+            llcp_dlsm_execute (p_dlcb, LLCP_DLC_EVENT_FRAME_ERROR, NULL);
+            return;
+        }
         if (p_msg)
         {
             i_pdu_length = p_msg->len;
@@ -1497,5 +1522,3 @@ static char *llcp_dlsm_get_event_name (tLLCP_DLC_EVENT event)
     }
 }
 #endif /* (BT_TRACE_VERBOSE == TRUE) */
-
-

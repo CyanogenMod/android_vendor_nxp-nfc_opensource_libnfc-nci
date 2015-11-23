@@ -370,4 +370,3 @@ NFC_API extern void NFA_ChoSetTestParam (UINT8  test_enable,
 #endif
 
 #endif /* NFA_CHO_API_H */
-

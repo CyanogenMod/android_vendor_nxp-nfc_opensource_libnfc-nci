@@ -15,7 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 /******************************************************************************
  *
@@ -35,7 +53,9 @@
 #include "rw_api.h"
 #include "rw_int.h"
 
-#define RW_I93_TOUT_RESP                        1000    /* Response timeout     */
+#if(NXP_EXTNS == TRUE)
+#define RW_I93_TOUT_RESP                        RW_I93_MAX_RSP_TIMEOUT    /* Response timeout     */
+#endif
 #define RW_I93_TOUT_STAY_QUIET                  200     /* stay quiet timeout   */
 #define RW_I93_READ_MULTI_BLOCK_SIZE            128     /* max reading data if read multi block is supported */
 #define RW_I93_FORMAT_DATA_LEN                  8       /* CC, zero length NDEF, Terminator TLV              */
@@ -1944,14 +1964,30 @@ void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
 *******************************************************************************/
 void rw_i93_sm_read_ndef (BT_HDR *p_resp)
 {
+#if(NXP_EXTNS == TRUE)
+    UINT8      *p;
+    UINT16      offset = 0, length = 0;
+#else
     UINT8      *p = (UINT8 *) (p_resp + 1) + p_resp->offset;
-    UINT8       flags;
     UINT16      offset, length = p_resp->len;
+#endif
+
+    UINT8       flags;
+
     tRW_I93_CB *p_i93 = &rw_cb.tcb.i93;
     tRW_DATA    rw_data;
 
     RW_TRACE_DEBUG0 ("rw_i93_sm_read_ndef ()");
 
+    if(NULL == p_resp)
+    {
+        RW_TRACE_DEBUG0 ("rw_i93_sm_read_ndef: p_resp is NULL");
+        return;
+    }
+#if(NXP_EXTNS == TRUE)
+    p = (UINT8 *) (p_resp + 1) + p_resp->offset;
+    length = p_resp->len;
+#endif
     STREAM_TO_UINT8 (flags, p);
     length--;
 
@@ -3080,6 +3116,15 @@ static void rw_i93_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_
         }
         else
         {
+#if(NXP_EXTNS == TRUE)
+            /* free retry buffer */
+            if ((event == NFC_DEACTIVATE_CEVT )&& p_i93->p_retry_cmd)
+            {
+                GKI_freebuf (p_i93->p_retry_cmd);
+                p_i93->p_retry_cmd = NULL;
+                p_i93->retry_count = 0;
+            }
+#endif
             NFC_SetStaticRfCback (NULL);
             p_i93->state = RW_I93_STATE_NOT_ACTIVATED;
         }

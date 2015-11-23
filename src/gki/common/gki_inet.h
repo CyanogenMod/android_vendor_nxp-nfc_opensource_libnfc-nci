@@ -23,8 +23,8 @@
 #define htons   ntohs
 #define htonl   ntohl
 
-#define htonets	nettohs
-#define htonetl	nettohl
+#define htonets nettohs
+#define htonetl nettohl
 
 #if BIG_ENDIAN == TRUE
 #define ntohs(n) (n)
@@ -44,4 +44,3 @@ extern UINT8 *ntoh6(UINT8 *p);
 #endif
 
 #endif /* GKI_INET_H */
-

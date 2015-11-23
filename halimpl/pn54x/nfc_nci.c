@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2014 NXP Semiconductors
+ * Copyright (C) 2015 NXP Semiconductors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,13 @@
 
 #define LOG_TAG "NxpNfcNciHal"
 
-#include <string.h>
-#include <stdlib.h>
 #include <utils/Log.h>
 #include <errno.h>
 #include <hardware/hardware.h>
 #include <hardware/nfc.h>
 #include <phNxpNciHal_Adaptation.h>
-
+#include <string.h>
+#include <stdlib.h>
 /*****************************************************************************
  * NXP NCI HAL Function implementations.
  *****************************************************************************/
@@ -65,6 +64,24 @@ static int hal_write(const struct nfc_nci_device *p_dev, uint16_t data_len,
     pn547_dev_t* dev = (pn547_dev_t*) p_dev;
 
     retval = phNxpNciHal_write(data_len, p_data);
+    return retval;
+}
+
+/*******************************************************************************
+**
+** Function         hal_ioctl
+**
+** Description      Invoke ioctl to  to NFCC driver.
+**
+** Returns          status code of ioctl.
+**
+*******************************************************************************/
+static int hal_ioctl(const struct nfc_nci_device *p_dev, long arg, void *p_data)
+{
+    int retval = 0;
+    pn547_dev_t* dev = (pn547_dev_t*) p_dev;
+
+    retval = phNxpNciHal_ioctl(arg, p_data);
     return retval;
 }
 
@@ -208,6 +225,7 @@ static int nfc_open(const hw_module_t* module, const char* name,
         /* NCI HAL method pointers */
         dev->nci_device.open = hal_open;
         dev->nci_device.write = hal_write;
+        dev->nci_device.ioctl = hal_ioctl;
         dev->nci_device.core_initialized = hal_core_initialized;
         dev->nci_device.pre_discover = hal_pre_discover;
         dev->nci_device.close = hal_close;
@@ -239,7 +257,7 @@ struct nfc_nci_module_t HAL_MODULE_INFO_SYM =
         .tag = HARDWARE_MODULE_TAG,
         .module_api_version = 0x0100, /* [15:8] major, [7:0] minor (1.0) */
         .hal_api_version = 0x00, /* 0 is only valid value */
-        .id = NFC_NCI_HARDWARE_MODULE_ID,
+        .id = NFC_NCI_NXP_PN54X_HARDWARE_MODULE_ID,
         .name = "NXP PN54X NFC NCI HW HAL",
         .author = "NXP Semiconductors",
         .methods = &nfc_module_methods,

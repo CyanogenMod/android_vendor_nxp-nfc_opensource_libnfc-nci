@@ -404,7 +404,6 @@ typedef struct
     BOOLEAN                 b_wait_hcp_conn_create_rsp; /* Waiting for hcp connection create response */
     BOOLEAN                 clear_all_pipes_to_uicc1; /* UICC1 was restarted for patch download */
     BOOLEAN                 update_session_id;        /* Next response from NFCC is to Get Session id cmd */
-    BOOLEAN                 hci_fw_workaround;        /* HAL HCI Workaround need */
     BOOLEAN                 hci_fw_validate_netwk_cmd;/* Flag to indicate if hci network ntf to validate */
     UINT8                   hcp_conn_id;              /* NCI Connection id for HCP */
     UINT8                   dh_session_id[1];         /* Byte 0 of DH Session ID */

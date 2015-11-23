@@ -15,7 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 /******************************************************************************
  *
@@ -159,7 +177,7 @@ tRW_EVENT rw_t1t_info_to_event (const tT1T_CMD_RSP_INFO * p_info)
         break;
 
     default:
-	    rw_event = t1t_info_to_evt (p_info);
+        rw_event = t1t_info_to_evt (p_info);
         break;
     }
     return rw_event;
@@ -2200,7 +2218,11 @@ static void rw_t1t_update_lock_attributes (void)
                     {
                         /* Set/clear lock_attr byte bits based on whether a particular lock bit is set or not
                          * each bit in lock_attr represents one byte in Tag read only attribute */
+#if(NXP_EXTNS == TRUE)
+                        if ((p_t1t->lockbyte[num_dynamic_lock_bytes].lock_byte & rw_t1t_mask_bits[xx]) && (block_count < T1T_BLOCKS_PER_SEGMENT))
+#else
                         if (p_t1t->lockbyte[num_dynamic_lock_bytes].lock_byte & rw_t1t_mask_bits[xx])
+#endif
                         {
                             p_t1t->lock_attr[block_count] |= 0x01 << bits_covered;
                         }

@@ -15,14 +15,32 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-
-
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 /******************************************************************************
  *
  *  NFA interface to HCI
  *
  ******************************************************************************/
 #include <string.h>
+#include <unistd.h>
 #include "nfc_api.h"
 #include "nfa_sys.h"
 #include "nfa_sys_int.h"
@@ -911,13 +929,13 @@ tNFA_STATUS NFA_HciAddStaticPipe (tNFA_HANDLE hci_handle, UINT8 host, UINT8 gate
         NFA_TRACE_API1 ("NFA_HciAddStaticPipe (): Invalid Gate:0x%02x", gate);
         return (NFA_STATUS_FAILED);
     }
-
+#if(NXP_EXTNS != TRUE)
     if (pipe <= NFA_HCI_LAST_DYNAMIC_PIPE)
     {
         NFA_TRACE_API1 ("NFA_HciAddStaticPipe (): Invalid Pipe:0x%02x", pipe);
         return (NFA_STATUS_FAILED);
     }
-
+#endif
     NFA_TRACE_API2 ("NFA_HciAddStaticPipe (): hci_handle:0x%04x, pipe:0x%02X", hci_handle, pipe);
 
     /* Request HCI to delete a pipe created by the application identified by hci handle */
@@ -1011,3 +1029,39 @@ void NFA_HciDebug (UINT8 action, UINT8 size, UINT8 *p_data)
         break;
     }
 }
+#if(NXP_EXTNS == TRUE)
+/*******************************************************************************
+**
+** Function         NFA_HciW4eSETransaction_Complete
+**
+** Description      This function is called to wait for eSE transaction
+**                  to complete before NFCC shutdown or NFC service turn OFF
+**
+** Returns          None
+**
+*******************************************************************************/
+void NFA_HciW4eSETransaction_Complete(tNFA_HCI_TRANSCV_STATE type)
+{
+    NFA_TRACE_API1 ("NFA_HciW4eSETransaction_Complete; type=%u", type);
+    UINT8 retry_cnt = 0;
+    UINT8 max_time =NFA_HCI_MAX_RSP_WAIT_TIME;
+
+    if(type == Release)
+    {
+        nfa_hci_release_transcieve();
+    }
+    else
+    {
+        do
+        {
+            if(nfa_hci_cb.hci_state == NFA_HCI_STATE_WAIT_RSP)
+            {
+                sleep(1);
+            }
+            else
+                break;
+        }while(retry_cnt++ < max_time);
+    }
+    NFA_TRACE_API0 ("NFA_HciW4eSETransaction_Complete; End");
+}
+#endif

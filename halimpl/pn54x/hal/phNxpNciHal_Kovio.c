@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2014 NXP Semiconductors
+ * Copyright (C) 2015 NXP Semiconductors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ extern NFCSTATUS phNxpNciHal_send_ext_cmd(uint16_t cmd_len, uint8_t *p_cmd);
 int kovio_detected = 0x00;
 int send_to_upper_kovio = 0x01;
 int disable_kovio=0x00;
+bool_t rf_deactive_cmd = FALSE;
 static uint8_t rf_deactivate_cmd[]   = { 0x21, 0x06, 0x01, 0x03 }; /* discovery */
 static uint8_t rf_deactivated_ntf[]  = { 0x61, 0x06, 0x02, 0x03, 0x01 };
 static uint8_t reset_ntf[] = {0x60, 0x00, 0x06, 0xA0, 0x00, 0xC7, 0xD4, 0x00, 0x00};
@@ -121,7 +122,7 @@ static NFCSTATUS phNxpNciHal_rf_deactivate()
             //Send the Core Reset NTF to upper layer, which will trigger the recovery.
             nxpncihal_ctrl.rx_data_len = sizeof(reset_ntf);
             memcpy(nxpncihal_ctrl.p_rx_data, reset_ntf, sizeof(reset_ntf));
-            (*nxpncihal_ctrl.p_nfc_stack_data_cback)(nxpncihal_ctrl.rx_data_len, nxpncihal_ctrl.p_rx_data);
+            //(*nxpncihal_ctrl.p_nfc_stack_data_cback)(nxpncihal_ctrl.rx_data_len, nxpncihal_ctrl.p_rx_data);
         }
     }
 
@@ -179,8 +180,18 @@ NFCSTATUS phNxpNciHal_kovio_rsp_ext(uint8_t *p_ntf, uint16_t *p_len)
             {
                 send_to_upper_kovio = 0;
             }
-            NXPLOG_NCIHAL_D("Send RF deactivate command to NFCC");
-            status = phNxpNciHal_rf_deactivate();
+
+            if(!rf_deactive_cmd)
+            {
+                NXPLOG_NCIHAL_D("Send RF deactivate command to NFCC");
+                status = phNxpNciHal_rf_deactivate();
+            }
+            else
+            {
+                NXPLOG_NCIHAL_D("RF deactivate command is already sent to NFCC");
+                disable_kovio = TRUE;
+                send_to_upper_kovio = 0;
+            }
             status = phOsalNfc_Timer_Start(kovio_timer,
                     KOVIO_TIMEOUT,
                     &kovio_timer_handler,
@@ -206,6 +217,7 @@ NFCSTATUS phNxpNciHal_kovio_rsp_ext(uint8_t *p_ntf, uint16_t *p_len)
     }
     else if((p_ntf[0]==0x41)&&(p_ntf[1]==0x06)&&(p_ntf[2]==0x01)&&(p_ntf[3]==0x00))
     {
+        rf_deactive_cmd = FALSE;
         if(kovio_detected == 1)
             send_to_upper_kovio = 0;
         if((kovio_detected == 1)&&(disable_kovio==0x01))

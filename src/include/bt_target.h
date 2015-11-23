@@ -3979,4 +3979,3 @@ The H5 work around sequence will be:
 #include "bt_trace.h"
 
 #endif /* BT_TARGET_H */
-

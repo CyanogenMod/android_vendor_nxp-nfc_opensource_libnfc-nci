@@ -1556,4 +1556,3 @@ UINT16 GKI_poolutilization (UINT8 pool_id)
 
     return ((Q->cur_cnt * 100) / Q->total);
 }
-

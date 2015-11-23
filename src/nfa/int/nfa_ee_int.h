@@ -15,6 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 
 /******************************************************************************
@@ -74,7 +93,6 @@ enum
 
 };
 
-
 typedef UINT16 tNFA_EE_INT_EVT;
 #define NFA_EE_AE_ROUTE             0x80        /* for listen mode routing table*/
 #define NFA_EE_AE_VS                0x40
@@ -103,8 +121,33 @@ enum
     NFA_EE_CONN_ST_MAX
 };
 typedef UINT8 tNFA_EE_CONN_ST;
+#if(NXP_EXTNS == TRUE)
+#if(NFC_NXP_CHIP_TYPE != PN547C2)
+/**
+ * Max Routing Table Size = 720
+ * After allocating size for Technology based routing and Protocol based routing,
+ * the remaining size can be used for AID based routing
+ *
+ * Size for 1 Technology route entry = 5 bytes (includes Type(1 byte),
+ * Length (1 byte), Value (3 bytes - Power state, Tech Type, Location)
+ * TOTAL TECH ROUTE SIZE = 5 * 3  = 15 (For Tech A, B, F)
+ *
+ * Size for 1 Protocol route entry = 5 bytes (includes Type(1 byte),
+ * Length (1 byte), Value (3 bytes - Power state, Tech Type, Location)
+ * TOTAL PROTOCOL ROUTE SIZE = 5 * 6 = 30 (Protocols ISO-DEP, NFC-DEP, ISO-7816, T1T, T2T, T3T)
+ *
+ * SIZE FOR AID = 720 - 15 - 30 = 675
+ * BUFFER for future extensions = 15
+ * TOTAL SIZE FOR AID = 675 - 15 = 660
+ */
+#define NFA_EE_MAX_AID_CFG_LEN  (660)
 
+#else
+#define NFA_EE_MAX_AID_CFG_LEN  (160)
+#endif
+#else
 #define NFA_EE_MAX_AID_CFG_LEN  (510)
+#endif
 #define NFA_EE_7816_STATUS_LEN  (2)
 
 /* NFA EE control block flags:
@@ -133,6 +176,12 @@ typedef struct
     tNFA_PROTOCOL_MASK      proto_switch_on;    /* default routing - protocols switch_on     */
     tNFA_PROTOCOL_MASK      proto_switch_off;   /* default routing - protocols switch_off    */
     tNFA_PROTOCOL_MASK      proto_battery_off;  /* default routing - protocols battery_off   */
+#if(NXP_EXTNS == TRUE)
+    tNFA_PROTOCOL_MASK      proto_screen_lock;   /* default routing - protocols screen_lock    */
+    tNFA_PROTOCOL_MASK      proto_screen_off;  /* default routing - protocols screen_off  */
+    tNFA_TECHNOLOGY_MASK    tech_screen_lock;    /* default routing - technologies screen_lock*/
+    tNFA_TECHNOLOGY_MASK    tech_screen_off;   /* default routing - technologies screen_off*/
+#endif
     tNFA_EE_CONN_ST         conn_st;            /* connection status */
     UINT8                   conn_id;            /* connection id */
     tNFA_EE_CBACK           *p_ee_cback;        /* the callback function */
@@ -145,6 +194,9 @@ typedef struct
     UINT8                   aid_len[NFA_EE_MAX_AID_ENTRIES];/* the actual lengths in aid_cfg */
     UINT8                   aid_pwr_cfg[NFA_EE_MAX_AID_ENTRIES];/* power configuration of this AID entry */
     UINT8                   aid_rt_info[NFA_EE_MAX_AID_ENTRIES];/* route/vs info for this AID entry */
+#if(NXP_EXTNS == TRUE)
+    UINT8                   aid_rt_loc[NFA_EE_MAX_AID_ENTRIES];/* route location info for this AID entry */
+#endif
     UINT8                   aid_cfg[NFA_EE_MAX_AID_CFG_LEN];/* routing entries based on AID */
     UINT8                   aid_entries;        /* The number of AID entries in aid_cfg */
     UINT8                   nfcee_id;           /* ID for this NFCEE */
@@ -162,6 +214,11 @@ typedef struct
     tNFA_NFC_PROTOCOL       lbp_protocol;       /* Listen B' protocol   */
     UINT8                   size_mask;          /* the size for technology and protocol routing */
     UINT16                  size_aid;           /* the size for aid routing */
+#if(NXP_EXTNS == TRUE)
+    tNFA_NFC_PROTOCOL       pa_protocol;        /* Passive poll A SWP Reader   */
+    tNFA_NFC_PROTOCOL       pb_protocol;        /* Passive poll B SWP Reader   */
+    UINT8                   ee_req_op;          /* add or remove req ntf*/
+#endif
 } tNFA_EE_ECB;
 
 /* data type for NFA_EE_API_DISCOVER_EVT */
@@ -203,6 +260,10 @@ typedef struct
     tNFA_TECHNOLOGY_MASK    technologies_switch_on;
     tNFA_TECHNOLOGY_MASK    technologies_switch_off;
     tNFA_TECHNOLOGY_MASK    technologies_battery_off;
+#if(NXP_EXTNS == TRUE)
+    tNFA_TECHNOLOGY_MASK    technologies_screen_lock;
+    tNFA_TECHNOLOGY_MASK    technologies_screen_off;
+#endif
 } tNFA_EE_API_SET_TECH_CFG;
 
 /* data type for NFA_EE_API_SET_PROTO_CFG_EVT */
@@ -214,6 +275,11 @@ typedef struct
     tNFA_PROTOCOL_MASK  protocols_switch_on;
     tNFA_PROTOCOL_MASK  protocols_switch_off;
     tNFA_PROTOCOL_MASK  protocols_battery_off;
+#if(NXP_EXTNS == TRUE)
+    tNFA_PROTOCOL_MASK  protocols_screen_lock;
+    tNFA_PROTOCOL_MASK  protocols_screen_off;
+#endif
+
 } tNFA_EE_API_SET_PROTO_CFG;
 
 /* data type for NFA_EE_API_ADD_AID_EVT */
@@ -225,6 +291,9 @@ typedef struct
     UINT8               aid_len;
     UINT8               *p_aid;
     tNFA_EE_PWR_STATE   power_state;
+#if(NXP_EXTNS == TRUE)
+    UINT8               vs_info;
+#endif
 } tNFA_EE_API_ADD_AID;
 
 /* data type for NFA_EE_API_REMOVE_AID_EVT */
@@ -392,6 +461,9 @@ typedef UINT8 tNFA_EE_WAIT;
 #define NFA_EE_FLAG_WAIT_HCI            0x01    /* set this bit when waiting for HCI to finish the initialization process in NFA_EE_EM_STATE_RESTORING */
 #define NFA_EE_FLAG_NOTIFY_HCI          0x02    /* set this bit when EE needs to notify the p_enable_cback at the end of NFCEE discover process in NFA_EE_EM_STATE_RESTORING */
 #define NFA_EE_FLAG_WAIT_DISCONN        0x04    /* set this bit when gracefully disable with outstanding NCI connections */
+#if(NXP_EXTNS == TRUE)
+#define NFA_EE_FLAG_CFG_NFC_DEP         0x05    /* set this bit when NFC-DEP is configured in the routing table */
+#endif
 typedef UINT8 tNFA_EE_FLAGS;
 
 
@@ -432,6 +504,9 @@ extern tNFA_EE_CB nfa_ee_cb;
 extern tNFA_EE_CB *nfa_ee_cb_ptr;
 #define nfa_ee_cb (*nfa_ee_cb_ptr)
 #endif
+#if(NXP_EXTNS == TRUE)
+extern BOOLEAN gNfaProvisionMode;
+#endif
 
 /*****************************************************************************
 **  External functions
@@ -449,6 +524,10 @@ void nfa_ee_get_tech_route (UINT8 power_state, UINT8 *p_handles);
 void nfa_ee_proc_evt(tNFC_RESPONSE_EVT event, void *p_data);
 tNFA_EE_ECB * nfa_ee_find_ecb (UINT8 nfcee_id);
 tNFA_EE_ECB * nfa_ee_find_ecb_by_conn_id (UINT8 conn_id);
+#if(NXP_EXTNS == TRUE)
+UINT16 nfa_ee_lmrt_size();
+UINT8 nfa_ee_get_supported_tech_list(UINT8 nfcee_id);
+#endif
 UINT8 nfa_ee_ecb_to_mask (tNFA_EE_ECB *p_cb);
 void nfa_ee_restore_one_ecb (tNFA_EE_ECB *p_cb);
 BOOLEAN nfa_ee_is_active (tNFA_HANDLE nfcee_id);
@@ -479,6 +558,9 @@ void nfa_ee_rout_timeout(tNFA_EE_MSG *p_data);
 void nfa_ee_discv_timeout(tNFA_EE_MSG *p_data);
 void nfa_ee_lmrt_to_nfcc(tNFA_EE_MSG *p_data);
 void nfa_ee_update_rout(void);
+#if (NXP_EXTNS == TRUE)
+BOOLEAN nfa_ee_nfeeid_active(UINT8 nfee_id);
+#endif
 void nfa_ee_report_event(tNFA_EE_CBACK *p_cback, tNFA_EE_EVT event, tNFA_EE_CBACK_DATA *p_data);
 tNFA_EE_ECB * nfa_ee_find_aid_offset(UINT8 aid_len, UINT8 *p_aid, int *p_offset, int *p_entry);
 void nfa_ee_remove_labels(void);
@@ -486,6 +568,7 @@ int nfa_ee_find_total_aid_len(tNFA_EE_ECB *p_cb, int start_entry);
 void nfa_ee_start_timer(void);
 void nfa_ee_reg_cback_enable_done (tNFA_EE_ENABLE_DONE_CBACK *p_cback);
 void nfa_ee_report_update_evt (void);
+void find_and_resolve_tech_conflict();
 
 extern void nfa_ee_proc_hci_info_cback (void);
 void nfa_ee_check_disable (void);

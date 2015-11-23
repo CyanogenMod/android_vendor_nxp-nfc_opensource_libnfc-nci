@@ -15,7 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 /******************************************************************************
  *
@@ -31,6 +49,7 @@
 #include "llcp_int.h"
 #include "llcp_defs.h"
 #include "nfc_int.h"
+
 
 const UINT16 llcp_link_rwt[15] =  /* RWT = (302us)*2**WT; 302us = 256*16/fc; fc = 13.56MHz */
 {
@@ -69,6 +88,10 @@ static void    llcp_link_send_to_lower (BT_HDR *p_msg);
 
 #if (LLCP_TEST_INCLUDED == TRUE) /* this is for LLCP testing */
 extern tLLCP_TEST_PARAMS llcp_test_params;
+#endif
+
+#if(NXP_EXTNS == TRUE)
+extern unsigned char appl_dta_mode_flag;
 #endif
 
 /* debug functions type */
@@ -131,13 +154,13 @@ static void llcp_link_start_link_timer (void)
     {
         /* wait for application layer sending data */
         nfc_start_quick_timer (&llcp_cb.lcb.timer, NFC_TTYPE_LLCP_LINK_MANAGER,
-                               (((UINT32) llcp_cb.lcb.symm_delay) * QUICK_TIMER_TICKS_PER_SEC) / 1000);
+                (((UINT32) llcp_cb.lcb.symm_delay) * QUICK_TIMER_TICKS_PER_SEC) / 1000);
     }
     else
     {
         /* wait for data to receive from remote */
         nfc_start_quick_timer (&llcp_cb.lcb.timer, NFC_TTYPE_LLCP_LINK_MANAGER,
-                               ((UINT32) llcp_cb.lcb.peer_lto) * QUICK_TIMER_TICKS_PER_SEC / 1000);
+                ((UINT32) llcp_cb.lcb.peer_lto) * QUICK_TIMER_TICKS_PER_SEC / 1000);
     }
 }
 
@@ -152,7 +175,7 @@ static void llcp_link_start_link_timer (void)
 *******************************************************************************/
 static void llcp_link_stop_link_timer (void)
 {
-    nfc_stop_quick_timer (&llcp_cb.lcb.timer);
+         nfc_stop_quick_timer (&llcp_cb.lcb.timer);
 }
 
 /*******************************************************************************
@@ -204,10 +227,16 @@ tLLCP_STATUS llcp_link_activate (tLLCP_ACTIVATE_CONFIG *p_config)
                              llcp_link_rwt[p_config->waiting_time],
                              llcp_cb.lcb.peer_lto);
     }
-
-    /* extend LTO as much as internally required processing time and propagation delays */
-    llcp_cb.lcb.peer_lto += LLCP_INTERNAL_TX_DELAY + LLCP_INTERNAL_RX_DELAY;
-
+#if(NXP_EXTNS == TRUE)
+    /*For DTA mode Peer LTO Should not include TX RX Delay, Just llcp deactivate after Peer LTO time */
+    if(!appl_dta_mode_flag)
+    {
+#endif
+       /* extend LTO as much as internally required processing time and propagation delays */
+       llcp_cb.lcb.peer_lto += LLCP_INTERNAL_TX_DELAY + LLCP_INTERNAL_RX_DELAY;
+#if(NXP_EXTNS == TRUE)
+    }
+#endif
     /* LLCP version number agreement */
     if (llcp_link_version_agreement () == FALSE)
     {
@@ -222,7 +251,6 @@ tLLCP_STATUS llcp_link_activate (tLLCP_ACTIVATE_CONFIG *p_config)
         }
         return LLCP_STATUS_FAIL;
     }
-
     llcp_cb.lcb.received_first_packet = FALSE;
     llcp_cb.lcb.is_initiator = p_config->is_initiator;
 
@@ -266,6 +294,7 @@ tLLCP_STATUS llcp_link_activate (tLLCP_ACTIVATE_CONFIG *p_config)
 
         /* wait for data to receive from remote */
         llcp_link_start_link_timer ();
+
     }
 
 
@@ -455,7 +484,6 @@ void llcp_link_deactivate (UINT8 reason)
 
         NFC_FlushData (NFC_RF_CONN_ID);
     }
-
     llcp_deactivate_cleanup (reason);
 }
 
@@ -820,7 +848,6 @@ static void llcp_link_send_SYMM (void)
 {
     BT_HDR *p_msg;
     UINT8  *p;
-
     p_msg = (BT_HDR*) GKI_getpoolbuf (LLCP_POOL_ID);
 
     if (p_msg)
@@ -876,7 +903,6 @@ static void llcp_link_send_invalid_pdu (void)
 void llcp_link_check_send_data (void)
 {
     BT_HDR *p_pdu;
-
     /* don't re-enter while processing to prevent out of sequence */
     if (llcp_cb.lcb.is_sending_data)
         return;
@@ -889,7 +915,7 @@ void llcp_link_check_send_data (void)
     */
     llcp_link_check_congestion ();
 
-    if (llcp_cb.lcb.symm_state == LLCP_LINK_SYMM_LOCAL_XMIT_NEXT)
+    if(llcp_cb.lcb.symm_state == LLCP_LINK_SYMM_LOCAL_XMIT_NEXT)
     {
         LLCP_TRACE_DEBUG0 ("llcp_link_check_send_data () in state of LLCP_LINK_SYMM_LOCAL_XMIT_NEXT");
 
@@ -1319,7 +1345,7 @@ static void llcp_link_proc_rx_data (BT_HDR *p_msg)
     BOOLEAN free_buffer = TRUE;
     BOOLEAN frame_error = FALSE;
 
-    if (llcp_cb.lcb.symm_state == LLCP_LINK_SYMM_REMOTE_XMIT_NEXT)
+    if(llcp_cb.lcb.symm_state == LLCP_LINK_SYMM_REMOTE_XMIT_NEXT)
     {
         llcp_link_stop_link_timer ();
 
@@ -1404,7 +1430,6 @@ static void llcp_link_proc_rx_data (BT_HDR *p_msg)
                     }
                 }
             }
-
             llcp_cb.lcb.symm_state = LLCP_LINK_SYMM_LOCAL_XMIT_NEXT;
 
             /* check if any pending packet */
@@ -1650,18 +1675,25 @@ static BT_HDR *llcp_link_build_next_pdu (BT_HDR *p_pdu)
         {
             /* Get a next PDU from link manager or data links */
             p_next_pdu = llcp_link_get_next_pdu (FALSE, &next_pdu_length);
+            if(p_next_pdu != NULL )
+            {
+                p = (UINT8 *) (p_agf + 1) + p_agf->offset + p_agf->len;
 
-            p = (UINT8 *) (p_agf + 1) + p_agf->offset + p_agf->len;
+                UINT16_TO_BE_STREAM (p, p_next_pdu->len);
+                memcpy (p, (UINT8 *) (p_next_pdu + 1) + p_next_pdu->offset, p_next_pdu->len);
 
-            UINT16_TO_BE_STREAM (p, p_next_pdu->len);
-            memcpy (p, (UINT8 *) (p_next_pdu + 1) + p_next_pdu->offset, p_next_pdu->len);
+                p_agf->len += 2 + p_next_pdu->len;
 
-            p_agf->len += 2 + p_next_pdu->len;
+                GKI_freebuf (p_next_pdu);
 
-            GKI_freebuf (p_next_pdu);
-
-            /* Get next PDU length from link manager or data links without dequeue */
-            llcp_link_get_next_pdu (TRUE, &next_pdu_length);
+                /* Get next PDU length from link manager or data links without dequeue */
+                llcp_link_get_next_pdu (TRUE, &next_pdu_length);
+            }
+            else
+            {
+                LLCP_TRACE_ERROR0 ("llcp_link_build_next_pdu (): Unable to get next pdu from queue");
+                break;
+            }
         }
         else
         {
@@ -1689,9 +1721,7 @@ static void llcp_link_send_to_lower (BT_HDR *p_pdu)
 #if (BT_TRACE_PROTOCOL == TRUE)
     DispLLCP (p_pdu, FALSE);
 #endif
-
-    llcp_cb.lcb.symm_state = LLCP_LINK_SYMM_REMOTE_XMIT_NEXT;
-
+         llcp_cb.lcb.symm_state = LLCP_LINK_SYMM_REMOTE_XMIT_NEXT;
     NFC_SendData (NFC_RF_CONN_ID, p_pdu);
 }
 
@@ -1762,8 +1792,8 @@ void llcp_link_connection_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *
     {
         if (llcp_cb.lcb.symm_state == LLCP_LINK_SYMM_REMOTE_XMIT_NEXT)
         {
-            /* LLCP shall stop LTO timer when receiving the first bit of LLC PDU */
-            llcp_link_stop_link_timer ();
+             /* LLCP shall stop LTO timer when receiving the first bit of LLC PDU */
+             llcp_link_stop_link_timer ();
         }
     }
 
@@ -1821,4 +1851,3 @@ static char *llcp_pdu_type (UINT8 ptype)
 }
 
 #endif
-

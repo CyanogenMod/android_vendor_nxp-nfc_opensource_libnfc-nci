@@ -15,7 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 /******************************************************************************
  *
@@ -29,6 +47,9 @@
 #include "nfa_ce_int.h"
 #include "nfa_sys_int.h"
 #include "ndef_utils.h"
+#if(NXP_EXTNS == TRUE)
+UINT32 gFelicaReaderMode;
+#endif
 
 /*****************************************************************************
 **  Constants
@@ -221,11 +242,33 @@ tNFA_STATUS NFA_GetConfig (UINT8 num_ids,
                            tNFA_PMID *p_param_ids)
 {
     tNFA_DM_API_GET_CONFIG *p_msg;
+#if(NXP_EXTNS == TRUE)
+    UINT8 bytes;
+    UINT8 propConfigCnt;
 
     NFA_TRACE_API1 ("NFA_GetConfig (): num_ids: %i", num_ids);
+    //NXP_EXTN code added to handle propritory config IDs
+    UINT32 idx = 0;
+    UINT8 *params =  p_param_ids;
+    propConfigCnt=0;
 
+    for(idx=0; idx<num_ids; idx++)
+    {
+        if(*params == 0xA0)
+        {
+            params++;
+            propConfigCnt++;
+        }
+        params++;
+    }
 
+    bytes = (num_ids - propConfigCnt) + (propConfigCnt<<1);
+
+    if ((p_msg = (tNFA_DM_API_GET_CONFIG *) GKI_getbuf ((UINT16) (sizeof (tNFA_DM_API_GET_CONFIG) + bytes))) != NULL)
+#else
+    NFA_TRACE_API1 ("NFA_GetConfig (): num_ids: %i", num_ids);
     if ((p_msg = (tNFA_DM_API_GET_CONFIG *) GKI_getbuf ((UINT16) (sizeof (tNFA_DM_API_GET_CONFIG) + num_ids))) != NULL)
+#endif
     {
         p_msg->hdr.event = NFA_DM_API_GET_CONFIG_EVT;
 
@@ -233,7 +276,11 @@ tNFA_STATUS NFA_GetConfig (UINT8 num_ids,
         p_msg->p_pmids = (tNFA_PMID *) (p_msg+1);
 
         /* Copy the param IDs */
+#if(NXP_EXTNS == TRUE)
+        memcpy (p_msg->p_pmids, p_param_ids, bytes);
+#else
         memcpy (p_msg->p_pmids, p_param_ids, num_ids);
+#endif
 
         nfa_sys_sendmsg (p_msg);
 
@@ -1185,6 +1232,54 @@ tNFA_STATUS NFA_SendVsCommand (UINT8            oid,
     return (NFA_STATUS_FAILED);
 }
 
+#if(NXP_EXTNS == TRUE)
+/*******************************************************************************
+**
+** Function         NFA_SendNxpNciCommand
+**
+** Description      This function is called to send an NXP NCI Vendor Specific
+**                  command to NFCC.
+**
+**                  cmd_params_len  - The command parameter len
+**                  p_cmd_params    - The command parameter
+**                  p_cback         - The callback function to receive the command
+**
+** Returns          NFA_STATUS_OK if successfully initiated
+**                  NFA_STATUS_FAILED otherwise
+**
+*******************************************************************************/
+tNFA_STATUS NFA_SendNxpNciCommand (UINT8            cmd_params_len,
+                                   UINT8            *p_cmd_params,
+                                   tNFA_VSC_CBACK    *p_cback)
+{
+    tNFA_DM_API_SEND_VSC *p_msg;
+    UINT16  size = sizeof(tNFA_DM_API_SEND_VSC) + cmd_params_len;
+
+    if ((p_msg = (tNFA_DM_API_SEND_VSC *) GKI_getbuf (size)) != NULL)
+    {
+        p_msg->hdr.event        = NFA_DM_API_SEND_NXP_EVT;
+        p_msg->p_cback          = p_cback;
+        if (cmd_params_len && p_cmd_params)
+        {
+            p_msg->cmd_params_len   = cmd_params_len;
+            p_msg->p_cmd_params     = (UINT8 *)(p_msg + 1);
+            memcpy (p_msg->p_cmd_params, p_cmd_params, cmd_params_len);
+        }
+        else
+        {
+            p_msg->cmd_params_len   = 0;
+            p_msg->p_cmd_params     = NULL;
+        }
+
+        nfa_sys_sendmsg (p_msg);
+
+        return (NFA_STATUS_OK);
+    }
+
+    return (NFA_STATUS_FAILED);
+}
+#endif
+
 /*******************************************************************************
 **
 ** Function         NFA_SetTraceLevel
@@ -1202,4 +1297,55 @@ UINT8 NFA_SetTraceLevel (UINT8 new_level)
 
     return (nfa_sys_cb.trace_level);
 }
-
+#if(NXP_EXTNS == TRUE)
+/*******************************************************************************
+**
+** Function       NFA_SetReaderMode
+**
+** Description:
+**    This function enable/disable  reader mode. In reader mode, even though if
+**    P2P & CE from UICC is detected, Priority will be given to TypeF UICC read.
+**    Its currently implemented for TypeF
+**
+**    ReaderModeFlag   Enable/Disable Reader Mode
+**    Technologies     Type of technologies to be set for Reader mode
+**                     Currently not used and reader mode is enabled for TypeF Only
+**
+** Returns:
+**    void
+*******************************************************************************/
+void NFA_SetReaderMode (BOOLEAN ReaderModeFlag, UINT32 Technologies)
+{
+    NFA_TRACE_API1 ("NFA_SetReaderMode =0x%x", ReaderModeFlag);
+    gFelicaReaderMode = ReaderModeFlag;
+    return;
+}
+/*******************************************************************************
+**
+** Function:        NFA_EnableDtamode
+**
+** Description:     Enable DTA Mode
+**
+** Returns:         none:
+**
+*******************************************************************************/
+void  NFA_EnableDtamode (tNFA_eDtaModes eDtaMode)
+{
+    NFA_TRACE_API1("0x%x: DTA Enabled", eDtaMode);
+    appl_dta_mode_flag = 0x01;
+    nfa_dm_cb.eDtaMode = eDtaMode;
+}
+tNFA_MW_VERSION NFA_GetMwVersion ()
+{
+    tNFA_MW_VERSION mwVer;
+    mwVer.validation = ( NXP_EN_PN547C2 | (NXP_EN_PN65T << 1) | (NXP_EN_PN548AD << 2) |
+                        (NXP_EN_PN66T << 3));
+    mwVer.android_version = NXP_ANDROID_VER;
+    NFA_TRACE_API1("0x%x:NFC MW Major Version:", NFC_NXP_MW_VERSION_MAJ);
+    NFA_TRACE_API1("0x%x:NFC MW Minor Version:", NFC_NXP_MW_VERSION_MIN);
+    mwVer.major_version = NFC_NXP_MW_VERSION_MAJ;
+    mwVer.minor_version = NFC_NXP_MW_VERSION_MIN;
+    NFA_TRACE_API2("mwVer:Major=0x%x,Minor=0x%x", mwVer.major_version,mwVer.minor_version);
+    return mwVer;
+}
+#endif

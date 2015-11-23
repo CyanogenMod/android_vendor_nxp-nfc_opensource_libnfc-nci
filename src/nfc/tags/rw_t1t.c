@@ -16,6 +16,25 @@
  *
  ******************************************************************************/
 
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 /******************************************************************************
  *
@@ -34,6 +53,9 @@
 #include "nfc_int.h"
 #include "gki.h"
 
+#if(NXP_EXTNS == TRUE)
+extern unsigned char appl_dta_mode_flag;
+#endif
 /* Local Functions */
 static tRW_EVENT rw_t1t_handle_rid_rsp (BT_HDR *p_pkt);
 static void rw_t1t_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_data);
@@ -295,6 +317,14 @@ void rw_t1t_conn_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_data)
         {
             rw_t1t_process_error ();
         }
+#if(NXP_EXTNS == TRUE)
+        if((p_data != NULL) && (p_data->data.p_data != NULL))
+        {
+            /* Free the response buffer in case of invalid response*/
+            GKI_freebuf((BT_HDR *) (p_data->data.p_data));
+            p_data->data.p_data = NULL;
+        }
+#endif
         break;
 
     default:
@@ -473,6 +503,10 @@ static tRW_EVENT rw_t1t_handle_rid_rsp (BT_HDR *p_pkt)
 
     /* Fetch UID0-3 from RID response message */
     STREAM_TO_ARRAY (p_t1t->mem,  p_rid_rsp, T1T_CMD_UID_LEN);
+#if(NXP_EXTNS == TRUE)
+    /* Free the RID response buffer */
+    GKI_freebuf (p_pkt);
+#endif
 
     /* Notify RID response Event */
     return RW_T1T_RID_EVT;
@@ -686,7 +720,11 @@ void rw_t1t_handle_op_complete (void)
 
     p_t1t->state    = RW_T1T_STATE_IDLE;
 #if (defined (RW_NDEF_INCLUDED) && (RW_NDEF_INCLUDED == TRUE))
+#if(NXP_EXTNS == TRUE)
+    if ((appl_dta_mode_flag == 0) && (p_t1t->state != RW_T1T_STATE_READ_NDEF))
+#else
     if (p_t1t->state != RW_T1T_STATE_READ_NDEF)
+#endif
     {
         p_t1t->b_update = FALSE;
         p_t1t->b_rseg   = FALSE;

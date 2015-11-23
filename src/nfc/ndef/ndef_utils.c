@@ -1567,4 +1567,3 @@ tNDEF_STATUS NDEF_MsgCopyAndDechunk (UINT8 *p_src, UINT32 src_len, UINT8 *p_dest
 
     return (status);
 }
-

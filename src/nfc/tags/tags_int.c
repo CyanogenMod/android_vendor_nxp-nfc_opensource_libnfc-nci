@@ -320,9 +320,9 @@ int tags_pow (int x, int y)
 static unsigned int tags_ones32 (register unsigned int x)
 {
         /* 32-bit recursive reduction using SWAR...
-	   but first step is mapping 2-bit values
-	   into sum of 2 1-bit values in sneaky way
-	*/
+       but first step is mapping 2-bit values
+       into sum of 2 1-bit values in sneaky way
+    */
         x -= ((x >> 1) & 0x55555555);
         x = (((x >> 2) & 0x33333333) + (x & 0x33333333));
         x = (((x >> 4) + x) & 0x0f0f0f0f);

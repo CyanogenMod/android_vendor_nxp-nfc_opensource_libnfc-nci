@@ -15,7 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 /******************************************************************************
  *
@@ -112,6 +130,10 @@ enum
     NFA_RW_OP_I93_LOCK_DSFID,
     NFA_RW_OP_I93_GET_SYS_INFO,
     NFA_RW_OP_I93_GET_MULTI_BLOCK_STATUS,
+
+#if(NXP_EXTNS == TRUE)
+    NFA_RW_OP_T3BT_PUPI,
+#endif
 
     NFA_RW_OP_MAX
 };
@@ -350,5 +372,9 @@ extern BOOLEAN nfa_rw_handle_event (BT_HDR *p_msg);
 extern void    nfa_rw_free_ndef_rx_buf (void);
 extern void    nfa_rw_sys_disable (void);
 
-#endif /* NFA_DM_INT_H */
+#if(NXP_EXTNS == TRUE)
+extern void nfa_rw_set_cback(tNFC_DISCOVER *p_data);
+extern void nfa_rw_update_pupi_id(UINT8 *p, UINT8 len);
+#endif
 
+#endif /* NFA_DM_INT_H */

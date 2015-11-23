@@ -15,7 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 /******************************************************************************
  *
@@ -36,6 +54,9 @@
 #define RW_T3T_FIRST_EVT    0x60
 #define RW_T4T_FIRST_EVT    0x80
 #define RW_I93_FIRST_EVT    0xA0
+#if(NXP_EXTNS == TRUE)
+#define RW_T3BT_FIRST_EVT   0xB0
+#endif
 
 enum
 {
@@ -102,6 +123,10 @@ enum
     RW_T4T_PRESENCE_CHECK_EVT,                  /* Response to RW_T4tPresenceCheck          */
     RW_T4T_RAW_FRAME_EVT,                       /* Response of raw frame sent               */
     RW_T4T_INTF_ERROR_EVT,                      /* RF Interface error event                 */
+#if(NXP_EXTNS == TRUE)
+    RW_T4T_NDEF_FORMAT_CPLT_EVT,                /* Format operation completed               */
+    RW_T4T_RAW_FRAME_RF_WTX_EVT,                /* Received RF WTX for raw frame sent       */
+#endif
     RW_T4T_MAX_EVT,
 
     /* ISO 15693 tag events for tRW_CBACK */
@@ -120,9 +145,17 @@ enum
     RW_I93_PRESENCE_CHECK_EVT,                  /* Response to RW_I93PresenceCheck    */
     RW_I93_RAW_FRAME_EVT,                       /* Response of raw frame sent         */
     RW_I93_INTF_ERROR_EVT,                      /* RF Interface error event           */
+#if(NXP_EXTNS == TRUE)
+    RW_I93_MAX_EVT,
+    RW_T3BT_RAW_READ_CPLT_EVT,
+    RW_T3BT_MAX_EVT
+#else
     RW_I93_MAX_EVT
+#endif
 };
-
+#if(NXP_EXTNS == TRUE)
+#define RW_I93_MAX_RSP_TIMEOUT    1000
+#endif
 #define RW_RAW_FRAME_EVT     0xFF
 
 typedef UINT8 tRW_EVENT;
@@ -840,6 +873,24 @@ NFC_API extern tNFC_STATUS RW_T3tPresenceCheck (void);
 *****************************************************************************/
 NFC_API extern tNFC_STATUS RW_T3tGetSystemCodes (void);
 
+#if(NXP_EXTNS == TRUE)
+/*****************************************************************************
+**
+** Function         RW_T4tFormatNDef
+**
+** Description
+**      Format a type-4 tag for NDEF.
+**
+**      Only Desifire tags are supported by this API. The
+**      RW_T4T_FORMAT_CPLT_EVT is used to notify the status of the operation.
+**
+** Returns
+**      NFC_STATUS_OK: if success
+**      NFC_STATUS_FAILED: other error
+*****************************************************************************/
+NFC_API extern tNFC_STATUS RW_T4tFormatNDef (void);
+#endif
+
 /*******************************************************************************
 **
 ** Function         RW_T4tDetectNDef
@@ -1306,5 +1357,9 @@ NFC_API extern tNFC_STATUS RW_SetActivatedTagType (tNFC_ACTIVATE_DEVT *p_activat
 **
 *******************************************************************************/
 NFC_API extern UINT8 RW_SetTraceLevel (UINT8 new_level);
+
+#if(NXP_EXTNS == TRUE)
+NFC_API extern tNFC_STATUS RW_T3BtGetPupiID();
+#endif
 
 #endif /* RW_API_H */

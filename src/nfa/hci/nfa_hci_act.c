@@ -15,8 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-
-
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 /******************************************************************************
  *
  *  This file contains the action functions for the NFA HCI.
@@ -1049,6 +1066,7 @@ static BOOLEAN nfa_hci_api_send_event (tNFA_HCI_EVENT_DATA *p_evt_data)
                         {
                             nfa_hci_cb.w4_rsp_evt   = TRUE;
                             nfa_hci_cb.hci_state    = NFA_HCI_STATE_WAIT_RSP;
+
                             nfa_sys_start_timer (&nfa_hci_cb.timer, NFA_HCI_RSP_TIMEOUT_EVT, p_evt_data->send_evt.rsp_timeout);
                         }
                         else if (p_pipe->local_gate == NFA_HCI_LOOP_BACK_GATE)
@@ -1283,7 +1301,14 @@ void nfa_hci_handle_admin_gate_cmd (UINT8 *p_data)
         STREAM_TO_UINT8 (pipe,        p_data);
 
         if (  (dest_gate == NFA_HCI_IDENTITY_MANAGEMENT_GATE)
-            ||(dest_gate == NFA_HCI_LOOP_BACK_GATE) )
+            ||(dest_gate == NFA_HCI_LOOP_BACK_GATE)
+#if(NXP_EXTNS == TRUE)
+#ifdef GEMALTO_SE_SUPPORT
+            ||(dest_gate == NFC_HCI_DEFAULT_DEST_GATE)
+            ||(dest_gate == NFA_HCI_CONNECTIVITY_GATE)
+#endif
+#endif
+        )
         {
             response = nfa_hciu_add_pipe_to_static_gate (dest_gate, pipe, source_host, source_gate);
         }
@@ -1413,6 +1438,7 @@ void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
         switch (nfa_hci_cb.cmd_sent)
         {
         case NFA_HCI_ANY_SET_PARAMETER:
+#if(NXP_EXTNS != TRUE)
             if (nfa_hci_cb.param_in_use == NFA_HCI_SESSION_IDENTITY_INDEX)
             {
                 /* Set WHITELIST */
@@ -1424,6 +1450,32 @@ void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
                     ||(nfa_hci_cb.hci_state == NFA_HCI_STATE_RESTORE)  )
                     nfa_hci_dh_startup_complete ();
             }
+#else
+            if (nfa_hci_cb.param_in_use == NFA_HCI_WHITELIST_INDEX)
+            {
+                if (nfa_hci_cb.b_hci_netwk_reset)
+                {
+                    nfa_hci_cb.b_hci_netwk_reset = FALSE;
+                   /* Session ID is reset, Set New session id */
+                    memcpy (&nfa_hci_cb.cfg.admin_gate.session_id[NFA_HCI_SESSION_ID_LEN / 2], nfa_hci_cb.cfg.admin_gate.session_id, (NFA_HCI_SESSION_ID_LEN / 2));
+                    os_tick = GKI_get_os_tick_count ();
+                    memcpy (nfa_hci_cb.cfg.admin_gate.session_id, (UINT8 *)&os_tick, (NFA_HCI_SESSION_ID_LEN / 2));
+                    nfa_hciu_send_set_param_cmd (NFA_HCI_ADMIN_PIPE, NFA_HCI_SESSION_IDENTITY_INDEX, NFA_HCI_SESSION_ID_LEN, (UINT8 *) nfa_hci_cb.cfg.admin_gate.session_id);
+                }
+                else
+                {
+                    /* First thing is to get the session ID */
+                    nfa_hciu_send_get_param_cmd (NFA_HCI_ADMIN_PIPE, NFA_HCI_SESSION_IDENTITY_INDEX);
+                }
+            }
+            else if (nfa_hci_cb.param_in_use == NFA_HCI_SESSION_IDENTITY_INDEX)
+            {
+                nfa_hci_network_enable();
+                if (  (nfa_hci_cb.hci_state == NFA_HCI_STATE_STARTUP)
+                    ||(nfa_hci_cb.hci_state == NFA_HCI_STATE_RESTORE)  )
+                    nfa_hci_dh_startup_complete ();
+            }
+#endif
             break;
 
         case NFA_HCI_ANY_GET_PARAMETER:
@@ -1458,14 +1510,29 @@ void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
                 /* The only parameter we get when initializing is the session ID. Check for match. */
                 if (!memcmp ((UINT8 *) nfa_hci_cb.cfg.admin_gate.session_id, p_data, NFA_HCI_SESSION_ID_LEN) )
                 {
+#if(NXP_EXTNS == TRUE)
+                    nfa_hci_network_enable();
+                    if (  (nfa_hci_cb.hci_state == NFA_HCI_STATE_STARTUP)
+                        ||(nfa_hci_cb.hci_state == NFA_HCI_STATE_RESTORE)  )
+                        nfa_hci_dh_startup_complete ();
+#else
                     /* Session has not changed, Set WHITELIST */
                     nfa_hciu_send_set_param_cmd (NFA_HCI_ADMIN_PIPE, NFA_HCI_WHITELIST_INDEX, p_nfa_hci_cfg->num_whitelist_host, p_nfa_hci_cfg->p_whitelist);
+#endif
                 }
                 else
                 {
+#if(NXP_EXTNS == TRUE)
+                    /* Session ID is reset, Set New session id */
+                    memcpy (&nfa_hci_cb.cfg.admin_gate.session_id[NFA_HCI_SESSION_ID_LEN / 2], nfa_hci_cb.cfg.admin_gate.session_id, (NFA_HCI_SESSION_ID_LEN / 2));
+                    os_tick = GKI_get_os_tick_count ();
+                    memcpy (nfa_hci_cb.cfg.admin_gate.session_id, (UINT8 *)&os_tick, (NFA_HCI_SESSION_ID_LEN / 2));
+                    nfa_hciu_send_set_param_cmd (NFA_HCI_ADMIN_PIPE, NFA_HCI_SESSION_IDENTITY_INDEX, NFA_HCI_SESSION_ID_LEN, (UINT8 *) nfa_hci_cb.cfg.admin_gate.session_id);
+#else
                     /* Something wrong, NVRAM data could be corrupt or first start with default session id */
                     nfa_hciu_send_clear_all_pipe_cmd ();
                     nfa_hci_cb.b_hci_netwk_reset = TRUE;
+#endif
                 }
             }
             break;
@@ -1473,6 +1540,7 @@ void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
         case NFA_HCI_ANY_OPEN_PIPE:
             nfa_hci_cb.cfg.admin_gate.pipe01_state = NFA_HCI_PIPE_OPENED;
 
+#if(NXP_EXTNS != TRUE)
             if (nfa_hci_cb.b_hci_netwk_reset)
             {
                 nfa_hci_cb.b_hci_netwk_reset = FALSE;
@@ -1487,6 +1555,9 @@ void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
                 /* First thing is to get the session ID */
                 nfa_hciu_send_get_param_cmd (NFA_HCI_ADMIN_PIPE, NFA_HCI_SESSION_IDENTITY_INDEX);
             }
+#else
+            nfa_hciu_send_set_param_cmd (NFA_HCI_ADMIN_PIPE, NFA_HCI_WHITELIST_INDEX, p_nfa_hci_cfg->num_whitelist_host, p_nfa_hci_cfg->p_whitelist);
+#endif
             break;
 
         case NFA_HCI_ADM_CLEAR_ALL_PIPE:
@@ -1763,6 +1834,31 @@ void nfa_hci_handle_dyn_pipe_pkt (UINT8 pipe_id, UINT8 *p_data, UINT16 data_len)
     {
         nfa_hci_handle_connectivity_gate_pkt (p_data, data_len, p_pipe);
     }
+#if(NXP_EXTNS == TRUE)
+#ifdef GEMALTO_SE_SUPPORT
+    else if (p_pipe->local_gate == NFC_HCI_DEFAULT_DEST_GATE)
+    {
+        /* Check if data packet is a command, response or event */
+        p_gate = nfa_hci_cb.cfg.dyn_gates;
+        p_gate->gate_owner = 0x0800;
+
+        switch (nfa_hci_cb.type)
+        {
+        case NFA_HCI_COMMAND_TYPE:
+            nfa_hci_handle_generic_gate_cmd (p_data, (UINT8) data_len, p_gate, p_pipe);
+            break;
+
+        case NFA_HCI_RESPONSE_TYPE:
+            nfa_hci_handle_generic_gate_rsp (p_data, (UINT8) data_len, p_gate, p_pipe);
+            break;
+
+        case NFA_HCI_EVENT_TYPE:
+            nfa_hci_handle_generic_gate_evt (p_data, data_len, p_gate, p_pipe);
+            break;
+        }
+    }
+#endif
+#endif
     else
     {
         p_gate = nfa_hciu_find_gate_by_gid (p_pipe->local_gate);
@@ -2196,10 +2292,16 @@ static void nfa_hci_handle_generic_gate_evt (UINT8 *p_data, UINT16 data_len, tNF
         evt_data.rcvd_evt.status    = NFA_STATUS_OK;
 
     evt_data.rcvd_evt.p_evt_buf = p_data;
-    nfa_hci_cb.rsp_buf_size     = 0;
-    nfa_hci_cb.p_rsp_buf        = NULL;
+#if(NXP_EXTNS == TRUE)
+    if(nfa_hci_cb.inst != NFA_HCI_EVT_WTX)
+    {
+#endif
+        nfa_hci_cb.rsp_buf_size     = 0;
+        nfa_hci_cb.p_rsp_buf        = NULL;
+#if(NXP_EXTNS == TRUE)
+    }
+#endif
 
     /* notify NFA_HCI_EVENT_RCVD_EVT to the application */
     nfa_hciu_send_to_app (NFA_HCI_EVENT_RCVD_EVT, &evt_data, p_gate->gate_owner);
 }
-

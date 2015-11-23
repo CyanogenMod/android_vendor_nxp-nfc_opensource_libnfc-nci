@@ -106,4 +106,3 @@ NFC_API extern void nfa_nv_ci_read (UINT16            num_bytes_read,
 #endif
 
 #endif /* BTA_FS_CI_H */
-

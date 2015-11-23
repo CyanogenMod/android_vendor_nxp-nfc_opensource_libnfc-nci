@@ -164,7 +164,7 @@ void llcp_process_timeout (TIMER_LIST_ENT *p_tle)
         break;
 
     case NFC_TTYPE_LLCP_DELAY_FIRST_PDU:
-        llcp_link_check_send_data ();
+            llcp_link_check_send_data ();
         break;
 
     default:
