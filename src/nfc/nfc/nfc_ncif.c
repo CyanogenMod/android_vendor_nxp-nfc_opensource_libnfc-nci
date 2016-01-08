@@ -1,25 +1,12 @@
 /******************************************************************************
  *
- *  Copyright (C) 1999-2014 Broadcom Corporation
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at:
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- ******************************************************************************/
-/******************************************************************************
- *
- *  The original Work has been changed by NXP Semiconductors.
+ *  Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ *  Not a Contribution.
  *
  *  Copyright (C) 2015 NXP Semiconductors
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 1999-2014 Broadcom Corporation
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -527,7 +514,10 @@ void nfc_ncif_check_cmd_queue (BT_HDR *p_buf)
                     GKI_freebuf(nfc_cb.last_cmd_buf); // ======> Free before allocation
                 }
                 nfc_cb.last_cmd_buf = (UINT8 *) GKI_getbuf(nfc_cb.cmd_size +1 );
-                memcpy(nfc_cb.last_cmd_buf, ps + NFC_SAVED_HDR_SIZE, (nfc_cb.cmd_size + 1));
+                if(nfc_cb.last_cmd_buf != NULL)
+                {
+                    memcpy(nfc_cb.last_cmd_buf, ps + NFC_SAVED_HDR_SIZE, (nfc_cb.cmd_size + 1));
+                }
                 memcpy(nfc_cb.last_cmd, ps + NCI_MSG_HDR_SIZE, NFC_SAVED_CMD_SIZE);
             }
             else
@@ -1993,6 +1983,9 @@ void nfc_data_event (tNFC_CONN_CB * p_cb)
             }
 
             p_evt = (BT_HDR *) GKI_dequeue (&p_cb->rx_q);
+            if(p_evt == NULL)
+                break;
+
             /* report data event */
             p_evt->offset   += NCI_MSG_HDR_SIZE;
             p_evt->len      -= NCI_MSG_HDR_SIZE;

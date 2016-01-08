@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
+ *
  * Copyright (C) 2015 NXP Semiconductors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -702,7 +705,8 @@ static NFCSTATUS phDnldNfc_BuildFramePkt(pphDnldNfc_DlContext_t pDlContext)
                 }
 
                 /* calculate CRC16 */
-                wCrcVal = phDnldNfc_CalcCrc16((pDlContext->tCmdRspFrameInfo.aFrameBuff),wFrameLen);
+                if(wFrameLen <= PHDNLDNFC_CMDRESP_MAX_BUFF_SIZE)
+                    wCrcVal = phDnldNfc_CalcCrc16((pDlContext->tCmdRspFrameInfo.aFrameBuff),wFrameLen);
 
                 pFrameByte = (uint8_t *)&wCrcVal;
 

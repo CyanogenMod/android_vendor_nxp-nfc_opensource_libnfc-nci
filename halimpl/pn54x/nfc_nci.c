@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2015-2016, The Linux Foundation. All rights reserved.
  * Not a Contribution.
  *
  * Copyright (C) 2015 NXP Semiconductors
@@ -219,6 +219,12 @@ static int nfc_open(const hw_module_t* module, const char* name,
     {
         pn547_dev_t *dev = calloc(1, sizeof(pn547_dev_t));
 
+        if(dev == NULL)
+        {
+            retval = -ENOMEM;
+            goto exit;
+        }
+
         /* Common hw_device_t fields */
         dev->nci_device.common.tag = HARDWARE_DEVICE_TAG;
         dev->nci_device.common.version = 0x00010000; /* [31:16] major, [15:0] minor */
@@ -242,6 +248,7 @@ static int nfc_open(const hw_module_t* module, const char* name,
         retval = -EINVAL;
     }
 
+exit:
     ALOGD("%s: exit %d", __FUNCTION__, retval);
     return retval;
 }

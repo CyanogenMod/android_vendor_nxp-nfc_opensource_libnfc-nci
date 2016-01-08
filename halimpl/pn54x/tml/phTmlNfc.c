@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
+ *
  * Copyright (C) 2015 NXP Semiconductors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -345,7 +348,8 @@ static void phTmlNfc_TmlThread(void *pParam)
 {
     NFCSTATUS wStatus = NFCSTATUS_SUCCESS;
     int32_t dwNoBytesWrRd = PH_TMLNFC_RESET_VALUE;
-    uint8_t temp[260];
+    const size_t BUFF_SIZE = 260;
+    uint8_t temp[BUFF_SIZE];
     /* Transaction info buffer to be passed to Callback Thread */
     static phTmlNfc_TransactInfo_t tTransactionInfo;
     /* Structure containing Tml callback function and parameters to be invoked
@@ -378,7 +382,7 @@ static void phTmlNfc_TmlThread(void *pParam)
             if (NFCSTATUS_INVALID_DEVICE != (uintptr_t)gpphTmlNfc_Context->pDevHandle)
             {
                 NXPLOG_TML_D("PN54X - Invoking I2C Read.....\n");
-                dwNoBytesWrRd = phTmlNfc_i2c_read(gpphTmlNfc_Context->pDevHandle, temp, 260);
+                dwNoBytesWrRd = phTmlNfc_i2c_read(gpphTmlNfc_Context->pDevHandle, temp, BUFF_SIZE);
 
                 if (-1 == dwNoBytesWrRd)
                 {
@@ -387,7 +391,8 @@ static void phTmlNfc_TmlThread(void *pParam)
                 }
                 else
                 {
-                    memcpy(gpphTmlNfc_Context->tReadInfo.pBuffer, temp, dwNoBytesWrRd);
+                    if(dwNoBytesWrRd <= (int32_t) BUFF_SIZE)
+                        memcpy(gpphTmlNfc_Context->tReadInfo.pBuffer, temp, dwNoBytesWrRd);
 
                     NXPLOG_TML_D("PN54X - I2C Read successful.....\n");
                     /* This has to be reset only after a successful read */

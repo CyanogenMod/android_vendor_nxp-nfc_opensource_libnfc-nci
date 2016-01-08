@@ -1,4 +1,6 @@
 /******************************************************************************
+ *  Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ *  Not a Contribution.
  *
  *  Copyright (C) 2010-2014 Broadcom Corporation
  *
@@ -429,6 +431,9 @@ void nfa_dm_ndef_handle_message (tNFA_STATUS status, UINT8 *p_msg_buf, UINT32 le
     {
         /* Get record type */
         p_type = NDEF_RecGetType (p_rec, &tnf, &type_len);
+
+        if(p_type == NULL)
+            break;
 
         /* Indicate record not handled yet */
         record_handled = FALSE;

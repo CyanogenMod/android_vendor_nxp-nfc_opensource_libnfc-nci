@@ -1,4 +1,6 @@
 /******************************************************************************
+ *  Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ *  Not a Contribution.
  *
  *  Copyright (C) 1999-2012 Broadcom Corporation
  *
@@ -763,7 +765,7 @@ UINT32 GKI_get_remaining_ticks (TIMER_LIST_Q *p_timer_listq, TIMER_LIST_ENT  *p_
         }
 
         /* if found target entry */
-        if (p_tle == p_target_tle)
+        if ((p_tle) && (p_tle == p_target_tle))
         {
             rem_ticks += p_tle->ticks;
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2015-2016, The Linux Foundation. All rights reserved.
  * Not a Contribution.
  *
  * Copyright (C) 2015 NXP Semiconductors
@@ -1074,18 +1074,23 @@ static void hal_read_cb(void *pContext, phTmlNfc_TransactInfo_t *pInfo)
             p_cb_data->status  = NFCSTATUS_FAILED;
         }
 
-        if (pInfo->wStatus == NFCSTATUS_SUCCESS)
+        if(pInfo != NULL)
         {
-            NXPLOG_NCIHAL_D("hal_read_cb successful status = 0x%x", pInfo->wStatus);
-            p_cb_data->status = NFCSTATUS_SUCCESS;
+            if (pInfo->wStatus == NFCSTATUS_SUCCESS)
+            {
+                NXPLOG_NCIHAL_D("hal_read_cb successful status = 0x%x", pInfo->wStatus);
+            }
+            else
+            {
+                NXPLOG_NCIHAL_E("hal_read_cb error status = 0x%x", pInfo->wStatus);
+            }
+
+            p_cb_data->status = pInfo->wStatus;
         }
         else
         {
-            NXPLOG_NCIHAL_E("hal_read_cb error status = 0x%x", pInfo->wStatus);
             p_cb_data->status = NFCSTATUS_FAILED;
         }
-
-        p_cb_data->status = pInfo->wStatus;
 
         nci_test_data_t *test_data = (nci_test_data_t*) p_cb_data->pContext;
 
