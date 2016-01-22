@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2015-2016, The Linux Foundation. All rights reserved.
  * Not a Contribution.
  *
  * Copyright (C) 2015 NXP Semiconductors
@@ -695,6 +695,11 @@ int phNxpNciHal_write(uint16_t data_len, const uint8_t *p_data)
 {
     NFCSTATUS status = NFCSTATUS_FAILED;
     static phLibNfc_Message_t msg;
+    /* hard coded offsets in phNxpNciHal_print_packet */
+    const uint16_t NCI_PRINT_OFFSET = 6;
+
+    if(data_len > NCI_MAX_DATA_LEN - NCI_PRINT_OFFSET)
+        return status;
 
     /* Create local copy of cmd_data */
     memcpy(nxpncihal_ctrl.p_cmd_data, p_data, data_len);

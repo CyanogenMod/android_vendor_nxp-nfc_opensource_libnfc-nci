@@ -1,4 +1,7 @@
  /*
+  * Copyright (c) 2016, The Linux Foundation. All rights reserved.
+  * Not a Contribution.
+  *
   * Copyright (C) 2015 NXP Semiconductors
   *
   * Licensed under the Apache License, Version 2.0 (the "License");
@@ -282,11 +285,6 @@ tJBL_STATUS JcopOsDwnld::GetInfo(JcopOs_ImageInfo_t* pImageInfo, tJBL_STATUS sta
                                  "/data/nfc/JcopOs_Update2.apdu",
                                  "/data/nfc/JcopOs_Update3.apdu"};
 
-    memcpy(pImageInfo->fls_path, (char *)path[pImageInfo->index], strlen(path[pImageInfo->index]));
-    bool stat = false;
-    IChannel_t *mchannel = gpJcopOs_Dwnld_Context->channel;
-    INT32 recvBufferActualSize = 0;
-
     ALOGD("%s: enter;", fn);
 
     if(pTranscv_Info == NULL ||
@@ -297,6 +295,11 @@ tJBL_STATUS JcopOsDwnld::GetInfo(JcopOs_ImageInfo_t* pImageInfo, tJBL_STATUS sta
     }
     else
     {
+        memcpy(pImageInfo->fls_path, (char *)path[pImageInfo->index], strlen(path[pImageInfo->index]));
+        bool stat = false;
+        IChannel_t *mchannel = gpJcopOs_Dwnld_Context->channel;
+        INT32 recvBufferActualSize = 0;
+
         memset(pTranscv_Info->sSendData, 0, 1024);
         pTranscv_Info->timeout = gTransceiveTimeout;
         pTranscv_Info->sSendlength = (UINT32)sizeof(GetInfo_APDU);

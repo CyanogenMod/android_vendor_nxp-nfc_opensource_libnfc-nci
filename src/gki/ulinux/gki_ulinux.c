@@ -1,4 +1,6 @@
 /******************************************************************************
+ *  Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ *  Not a Contribution.
  *
  *  Copyright (C) 1999-2012 Broadcom Corporation
  *
@@ -146,12 +148,18 @@ void GKI_init(void)
 {
     pthread_mutexattr_t attr;
     tGKI_OS             *p_os;
+    struct tms time_buff = {0};
+    clock_t ret = 0;
 
     memset (&gki_cb, 0, sizeof (gki_cb));
 
     gki_buffer_init();
     gki_timers_init();
-    gki_cb.com.OSTicks = (UINT32) times(0);
+    ret = times(&time_buff);
+    if(ret != (clock_t)-1)
+        gki_cb.com.OSTicks = (UINT32) ret;
+    else
+        gki_cb.com.OSTicks = 0;
 
     pthread_mutexattr_init(&attr);
 
@@ -1051,8 +1059,15 @@ INT8 *GKI_get_time_stamp (INT8 *tbuf)
     UINT32 m_time;
     UINT32 h_time;
     INT8   *p_out = tbuf;
+    struct tms time_buff = {0};
+    clock_t ret = 0;
 
-    gki_cb.com.OSTicks = times(0);
+    ret = times(&time_buff);
+    if(ret != (clock_t)-1)
+        gki_cb.com.OSTicks = times(&time_buff);
+    else
+        gki_cb.com.OSTicks = 0;
+
     ms_time = GKI_TICKS_TO_MS(gki_cb.com.OSTicks);
     s_time  = ms_time/100;   /* 100 Ticks per second */
     m_time  = s_time/60;

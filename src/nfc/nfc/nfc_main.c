@@ -1,25 +1,12 @@
 /******************************************************************************
  *
- *  Copyright (C) 2010-2014 Broadcom Corporation
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at:
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- ******************************************************************************/
-/******************************************************************************
- *
- *  The original Work has been changed by NXP Semiconductors.
+ *  Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ *  Not a Contribution.
  *
  *  Copyright (C) 2015 NXP Semiconductors
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2010-2014 Broadcom Corporation
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -916,6 +903,8 @@ tNFC_STATUS NFC_DiscoveryMap (UINT8 num, tNFC_DISCOVER_MAPS *p_maps,
     BOOLEAN is_supported;
     #if (NXP_EXTNS == TRUE)
     nfc_cb.num_disc_maps = num;
+    if(num > NFC_NFCC_MAX_NUM_VS_INTERFACE + NCI_INTERFACE_MAX)
+        return NFC_STATUS_FAILED;
     #endif
     nfc_cb.p_discv_cback = p_cback;
     num_intf             = 0;
@@ -1313,9 +1302,11 @@ tNFC_STATUS NFC_Deactivate (tNFC_DEACT_TYPE deactivate_type)
 *******************************************************************************/
 tNFC_STATUS NFC_UpdateRFCommParams (tNFC_RF_COMM_PARAMS *p_params)
 {
-    UINT8 tlvs[12];
+    const UINT8 TLV_SIZE = 12;
+    UINT8 tlvs[TLV_SIZE];
     UINT8 *p = tlvs;
     UINT8 data_exch_config;
+    tNFC_STATUS status = NFC_STATUS_FAILED;
 
     /* RF Technology and Mode */
     if (p_params->include_rf_tech_mode)
@@ -1355,8 +1346,10 @@ tNFC_STATUS NFC_UpdateRFCommParams (tNFC_RF_COMM_PARAMS *p_params)
 
         UINT8_TO_STREAM (p, data_exch_config);
     }
+    if((UINT8) (p-tlvs) <= TLV_SIZE)
+        status = nci_snd_parameter_update_cmd (tlvs, (UINT8) (p - tlvs));
 
-    return nci_snd_parameter_update_cmd (tlvs, (UINT8) (p - tlvs));
+    return status;
 }
 
 /*******************************************************************************

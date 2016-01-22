@@ -1,25 +1,12 @@
 /******************************************************************************
  *
- *  Copyright (C) 2010-2014 Broadcom Corporation
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at:
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- ******************************************************************************/
-/******************************************************************************
- *
- *  The original Work has been changed by NXP Semiconductors.
+ *  Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ *  Not a Contribution.
  *
  *  Copyright (C) 2015 NXP Semiconductors
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2010-2014 Broadcom Corporation
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -1366,6 +1353,9 @@ BT_HDR* llcp_dlc_get_next_pdu (tLLCP_DLCB *p_dlcb)
         &&(llcp_dlc_is_rw_open (p_dlcb))  )
     {
         p_msg = (BT_HDR *) GKI_dequeue (&p_dlcb->i_xmit_q);
+        if(p_msg == NULL)
+            return p_msg;
+
         llcp_cb.total_tx_i_pdu--;
 
         if (p_msg->offset >= LLCP_MIN_OFFSET)

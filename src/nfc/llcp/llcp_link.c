@@ -1,25 +1,12 @@
 /******************************************************************************
  *
- *  Copyright (C) 2010-2014 Broadcom Corporation
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at:
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- ******************************************************************************/
-/******************************************************************************
- *
- *  The original Work has been changed by NXP Semiconductors.
+ *  Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ *  Not a Contribution.
  *
  *  Copyright (C) 2015 NXP Semiconductors
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2010-2014 Broadcom Corporation
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -1059,8 +1046,11 @@ static void llcp_link_proc_ui_pdu (UINT8  local_sap,
                 /* add length of UI PDU */
                 UINT16_TO_BE_STREAM (p_dst, ui_pdu_length);
 
-                /* copy UI PDU with LLCP header */
-                memcpy (p_dst, p_ui_pdu, ui_pdu_length);
+                if(p_ui_pdu != NULL)
+                {
+                    /* copy UI PDU with LLCP header */
+                    memcpy (p_dst, p_ui_pdu, ui_pdu_length);
+                }
 
                 p_last_buf->len += LLCP_PDU_AGF_LEN_SIZE + ui_pdu_length;
 
@@ -1075,7 +1065,7 @@ static void llcp_link_proc_ui_pdu (UINT8  local_sap,
         if (!appended)
         {
             /* if it's not from AGF PDU */
-            if (p_msg)
+            if (p_msg && (p_ui_pdu != NULL))
             {
                 /* add length of PDU in front of UI PDU (reuse room for NCI header) */
                 p_ui_pdu -= LLCP_PDU_AGF_LEN_SIZE;
@@ -1089,7 +1079,7 @@ static void llcp_link_proc_ui_pdu (UINT8  local_sap,
             {
                 p_msg = (BT_HDR *) GKI_getpoolbuf (LLCP_POOL_ID);
 
-                if (p_msg)
+                if (p_msg && (p_ui_pdu != NULL))
                 {
                     p_dst = (UINT8*) (p_msg + 1);
 

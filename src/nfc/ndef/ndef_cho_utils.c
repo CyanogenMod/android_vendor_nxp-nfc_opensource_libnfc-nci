@@ -1,5 +1,8 @@
 /******************************************************************************
  *
+ *  Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ *  Not a Contribution.
+ *
  *  Copyright (C) 2010-2014 Broadcom Corporation
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -193,6 +196,10 @@ tNDEF_STATUS NDEF_MsgAddWktAc (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_size
         /* get start pointer of reserved payload */
         p = NDEF_RecGetPayload (p_rec, &payload_len);
 
+        /* check whether payload is NULL */
+        if(p == NULL)
+            return (NDEF_REC_NOT_FOUND);
+
         /* Add Carrier Power State */
         UINT8_TO_BE_STREAM (p, cps);
 
@@ -358,6 +365,11 @@ tNDEF_STATUS NDEF_MsgAppendMediaBtOobCod (UINT8 *p_msg, UINT32 max_size, UINT32 
     {
         /* payload length is the same as BT OOB data length */
         p = NDEF_RecGetPayload (p_rec, &oob_data_len);
+
+        /* check whether payload is NULL */
+        if(p == NULL)
+            return (NDEF_REC_NOT_FOUND);
+
         UINT16_TO_STREAM (p, oob_data_len);
     }
 
@@ -416,6 +428,11 @@ tNDEF_STATUS NDEF_MsgAppendMediaBtOobName (UINT8 *p_msg, UINT32 max_size, UINT32
     {
         /* payload length is the same as BT OOB data length */
         p = NDEF_RecGetPayload (p_rec, &oob_data_len);
+
+        /* check whether payload is NULL */
+        if(p == NULL)
+            return (NDEF_REC_NOT_FOUND);
+
         UINT16_TO_STREAM (p, oob_data_len);
     }
 
@@ -469,6 +486,11 @@ tNDEF_STATUS NDEF_MsgAppendMediaBtOobHashCRandR (UINT8 *p_msg, UINT32 max_size, 
     {
         /* payload length is the same as BT OOB data length */
         p = NDEF_RecGetPayload (p_rec, &oob_data_len);
+
+        /* check whether payload is NULL */
+        if(p == NULL)
+            return (NDEF_REC_NOT_FOUND);
+
         UINT16_TO_STREAM (p, oob_data_len);
     }
 
@@ -517,6 +539,11 @@ tNDEF_STATUS NDEF_MsgAppendMediaBtOobEirData (UINT8 *p_msg, UINT32 max_size, UIN
     {
         /* payload length is the same as BT OOB data length */
         p = NDEF_RecGetPayload (p_rec, &oob_data_len);
+
+        /* check whether payload is NULL */
+        if(p == NULL)
+            return (NDEF_REC_NOT_FOUND);
+
         UINT16_TO_STREAM (p, oob_data_len);
     }
 
