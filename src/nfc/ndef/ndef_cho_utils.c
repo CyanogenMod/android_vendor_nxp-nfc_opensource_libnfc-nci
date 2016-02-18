@@ -195,34 +195,36 @@ tNDEF_STATUS NDEF_MsgAddWktAc (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_size
 
         /* get start pointer of reserved payload */
         p = NDEF_RecGetPayload (p_rec, &payload_len);
-
-        /* check whether payload is NULL */
         if(p == NULL)
-            return (NDEF_REC_NOT_FOUND);
-
-        /* Add Carrier Power State */
-        UINT8_TO_BE_STREAM (p, cps);
-
-        /* Carrier Data Reference length */
-        ref_str_len = (UINT8)strlen (p_carrier_data_ref_str);
-
-        UINT8_TO_BE_STREAM (p, ref_str_len);
-
-        /* Carrier Data Reference */
-        ARRAY_TO_BE_STREAM (p, p_carrier_data_ref_str, ref_str_len);
-
-        /* Aux Data Reference Count */
-        UINT8_TO_BE_STREAM (p, aux_data_ref_count);
-
-        for (xx = 0; xx < aux_data_ref_count; xx++)
         {
-            /* Aux Data Reference length (1 byte) */
-            ref_str_len = (UINT8)strlen (p_aux_data_ref_str[xx]);
+            status = NDEF_MSG_EMPTY_PAYLOAD;
+        }
+        else
+        {
+            /* Add Carrier Power State */
+            UINT8_TO_BE_STREAM (p, cps);
+
+            /* Carrier Data Reference length */
+            ref_str_len = (UINT8)strlen (p_carrier_data_ref_str);
 
             UINT8_TO_BE_STREAM (p, ref_str_len);
 
-            /* Aux Data Reference */
-            ARRAY_TO_BE_STREAM (p, p_aux_data_ref_str[xx], ref_str_len);
+            /* Carrier Data Reference */
+            ARRAY_TO_BE_STREAM (p, p_carrier_data_ref_str, ref_str_len);
+
+            /* Aux Data Reference Count */
+            UINT8_TO_BE_STREAM (p, aux_data_ref_count);
+
+            for (xx = 0; xx < aux_data_ref_count; xx++)
+            {
+                /* Aux Data Reference length (1 byte) */
+                ref_str_len = (UINT8)strlen (p_aux_data_ref_str[xx]);
+
+                UINT8_TO_BE_STREAM (p, ref_str_len);
+
+                /* Aux Data Reference */
+                ARRAY_TO_BE_STREAM (p, p_aux_data_ref_str[xx], ref_str_len);
+            }
         }
     }
 
@@ -365,12 +367,14 @@ tNDEF_STATUS NDEF_MsgAppendMediaBtOobCod (UINT8 *p_msg, UINT32 max_size, UINT32 
     {
         /* payload length is the same as BT OOB data length */
         p = NDEF_RecGetPayload (p_rec, &oob_data_len);
-
-        /* check whether payload is NULL */
         if(p == NULL)
-            return (NDEF_REC_NOT_FOUND);
-
-        UINT16_TO_STREAM (p, oob_data_len);
+        {
+            status = NDEF_MSG_EMPTY_PAYLOAD;
+        }
+        else
+        {
+            UINT16_TO_STREAM (p, oob_data_len);
+        }
     }
 
     return (status);
@@ -428,12 +432,14 @@ tNDEF_STATUS NDEF_MsgAppendMediaBtOobName (UINT8 *p_msg, UINT32 max_size, UINT32
     {
         /* payload length is the same as BT OOB data length */
         p = NDEF_RecGetPayload (p_rec, &oob_data_len);
-
-        /* check whether payload is NULL */
         if(p == NULL)
-            return (NDEF_REC_NOT_FOUND);
-
-        UINT16_TO_STREAM (p, oob_data_len);
+        {
+            status = NDEF_MSG_EMPTY_PAYLOAD;
+        }
+        else
+        {
+            UINT16_TO_STREAM (p, oob_data_len);
+        }
     }
 
     return (status);
@@ -486,12 +492,14 @@ tNDEF_STATUS NDEF_MsgAppendMediaBtOobHashCRandR (UINT8 *p_msg, UINT32 max_size, 
     {
         /* payload length is the same as BT OOB data length */
         p = NDEF_RecGetPayload (p_rec, &oob_data_len);
-
-        /* check whether payload is NULL */
         if(p == NULL)
-            return (NDEF_REC_NOT_FOUND);
-
-        UINT16_TO_STREAM (p, oob_data_len);
+        {
+            status = NDEF_MSG_EMPTY_PAYLOAD;
+        }
+        else
+        {
+            UINT16_TO_STREAM (p, oob_data_len);
+        }
     }
 
     return (status);
@@ -539,12 +547,14 @@ tNDEF_STATUS NDEF_MsgAppendMediaBtOobEirData (UINT8 *p_msg, UINT32 max_size, UIN
     {
         /* payload length is the same as BT OOB data length */
         p = NDEF_RecGetPayload (p_rec, &oob_data_len);
-
-        /* check whether payload is NULL */
         if(p == NULL)
-            return (NDEF_REC_NOT_FOUND);
-
-        UINT16_TO_STREAM (p, oob_data_len);
+        {
+            status = NDEF_MSG_EMPTY_PAYLOAD;
+        }
+        else
+        {
+            UINT16_TO_STREAM (p, oob_data_len);
+        }
     }
 
     return (status);
