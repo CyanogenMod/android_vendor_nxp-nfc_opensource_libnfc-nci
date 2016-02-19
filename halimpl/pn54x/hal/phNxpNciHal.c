@@ -537,7 +537,7 @@ int phNxpNciHal_MinOpen(nfc_stack_callback_t *p_cback, nfc_stack_data_callback_t
     nxpncihal_ctrl.gDrvCfg.nClientId = phDal4Nfc_msgget(0, 0600);
     nxpncihal_ctrl.gDrvCfg.nLinkType = ENUM_LINK_TYPE_I2C;/* For PN54X */
     nxpncihal_ctrl.hal_boot_mode = boot_mode;
-    tTmlConfig.pDevName = (int8_t *) "/dev/pn544";
+    tTmlConfig.pDevName = (int8_t *) "/dev/nq-nci";
     tOsalConfig.dwCallbackThreadId
     = (uintptr_t) nxpncihal_ctrl.gDrvCfg.nClientId;
     tOsalConfig.pLogFile = NULL;
