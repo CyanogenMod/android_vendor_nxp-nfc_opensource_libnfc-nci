@@ -1,4 +1,6 @@
 /******************************************************************************
+ *  Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ *  Not a Contribution.
  *
  *  Copyright (C) 2010-2014 Broadcom Corporation
  *
@@ -88,7 +90,7 @@ tNFA_STATUS NFA_P2pRegisterServer (UINT8              server_sap,
         p_msg->server_sap = server_sap;
         p_msg->link_type  = link_type;
 
-        BCM_STRNCPY_S (p_msg->service_name, sizeof (p_msg->service_name), p_service_name, LLCP_MAX_SN_LEN);
+        NQ_STRLCPY_S (p_msg->service_name, sizeof (p_msg->service_name), p_service_name, LLCP_MAX_SN_LEN);
         p_msg->service_name[LLCP_MAX_SN_LEN] = 0;
 
         p_msg->p_cback = p_cback;
@@ -407,7 +409,7 @@ tNFA_STATUS NFA_P2pConnectByName (tNFA_HANDLE client_handle,
     {
         p_msg->hdr.event = NFA_P2P_API_CONNECT_EVT;
 
-        BCM_STRNCPY_S (p_msg->service_name, sizeof (p_msg->service_name), p_service_name, LLCP_MAX_SN_LEN);
+        NQ_STRLCPY_S (p_msg->service_name, sizeof (p_msg->service_name), p_service_name, LLCP_MAX_SN_LEN);
         p_msg->service_name[LLCP_MAX_SN_LEN] = 0;
 
         p_msg->dsap    = LLCP_INVALID_SAP;
@@ -1009,7 +1011,7 @@ tNFA_STATUS NFA_P2pGetRemoteSap (tNFA_HANDLE handle,
 
         p_msg->handle = handle;
 
-        BCM_STRNCPY_S (p_msg->service_name, sizeof (p_msg->service_name), p_service_name, LLCP_MAX_SN_LEN);
+        NQ_STRLCPY_S (p_msg->service_name, sizeof (p_msg->service_name), p_service_name, LLCP_MAX_SN_LEN);
         p_msg->service_name[LLCP_MAX_SN_LEN] = 0;
 
         nfa_sys_sendmsg (p_msg);

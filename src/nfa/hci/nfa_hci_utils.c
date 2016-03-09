@@ -328,7 +328,7 @@ tNFA_STATUS nfa_hciu_send_msg (UINT8 pipe_id, UINT8 type, UINT8 instruction, UIN
     UINT16          max_seg_hcp_pkt_size = nfa_hci_cb.buff_size;
 
 #if (BT_TRACE_VERBOSE == TRUE)
-    char    buff[100];
+    char    buff[VERBOSE_BUFF_SIZE];
 
     NFA_TRACE_DEBUG3 ("nfa_hciu_send_msg pipe_id:%d   %s  len:%d",
                       pipe_id, nfa_hciu_get_type_inst_names (pipe_id, type, instruction, buff), msg_len);
@@ -1353,21 +1353,21 @@ char *nfa_hciu_get_type_inst_names (UINT8 pipe, UINT8 type, UINT8 inst, char *p_
 {
     int   xx;
 
-    xx = sprintf (p_buff, "Type: %s [0x%02x] ", nfa_hciu_type_2_str (type), type);
+    xx = snprintf (p_buff, VERBOSE_BUFF_SIZE, "Type: %s [0x%02x] ", nfa_hciu_type_2_str (type), type);
 
     switch (type)
     {
     case NFA_HCI_COMMAND_TYPE:
-        sprintf (&p_buff[xx], "Inst: %s [0x%02x] ", nfa_hciu_instr_2_str (inst), inst);
+        snprintf (&p_buff[xx], VERBOSE_BUFF_SIZE, "Inst: %s [0x%02x] ", nfa_hciu_instr_2_str (inst), inst);
         break;
     case NFA_HCI_EVENT_TYPE:
-        sprintf (&p_buff[xx], "Evt: %s [0x%02x] ", nfa_hciu_evt_2_str (pipe, inst), inst);
+        snprintf (&p_buff[xx], VERBOSE_BUFF_SIZE, "Evt: %s [0x%02x] ", nfa_hciu_evt_2_str (pipe, inst), inst);
         break;
     case NFA_HCI_RESPONSE_TYPE:
-        sprintf (&p_buff[xx], "Resp: %s [0x%02x] ", nfa_hciu_get_response_name (inst), inst);
+        snprintf (&p_buff[xx], VERBOSE_BUFF_SIZE, "Resp: %s [0x%02x] ", nfa_hciu_get_response_name (inst), inst);
         break;
     default:
-        sprintf (&p_buff[xx], "Inst: %u ", inst);
+        snprintf (&p_buff[xx], VERBOSE_BUFF_SIZE, "Inst: %u ", inst);
         break;
     }
     return (p_buff);

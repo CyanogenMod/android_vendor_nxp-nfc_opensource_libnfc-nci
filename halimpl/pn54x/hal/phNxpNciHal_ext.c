@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
+ *
  * Copyright (C) 2015 NXP Semiconductors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -1059,7 +1062,8 @@ NFCSTATUS request_EEPROM(phNxpNci_EEPROM_info_t *mEEPROM_info)
         {
 
             //Clear the buffer first
-            memset(set_cfg_eeprom+setCfgStartIndex,0x00,sizeof(set_cfg_eeprom) - setCfgStartIndex);
+            if(setCfgStartIndex < sizeof(set_cfg_eeprom))
+                memset(set_cfg_eeprom+setCfgStartIndex,0x00,sizeof(set_cfg_eeprom) - setCfgStartIndex);
 
             //copy get config data into set_cfg_eeprom
             memcpy(set_cfg_eeprom+setCfgStartIndex, nxpncihal_ctrl.p_rx_data+getCfgStartIndex, fieldLen);

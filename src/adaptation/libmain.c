@@ -1,4 +1,6 @@
 /******************************************************************************
+ *  Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ *  Not a Contribution.
  *
  *  Copyright (C) 2011-2012 Broadcom Corporation
  *
@@ -89,14 +91,14 @@ extern void nfa_nv_co_read(UINT8 *pBuffer, UINT16 nbytes, UINT8 block)
 
     memset (filename, 0, sizeof(filename));
     memset (filename2, 0, sizeof(filename2));
-    strcpy(filename2, bcm_nfc_location);
-    strncat(filename2, sNfaStorageBin, sizeof(filename2)-strlen(filename2)-1);
+    strlcpy(filename2, bcm_nfc_location, sizeof(filename2));
+    strlcat(filename2, sNfaStorageBin, sizeof(filename2)-strlen(filename2)-1);
     if (strlen(filename2) > 200)
     {
         ALOGE ("%s: filename too long", __FUNCTION__);
         return;
     }
-    sprintf (filename, "%s%u", filename2, block);
+    snprintf (filename, 256, "%s%u", filename2, block);
 
     ALOGD ("%s: buffer len=%u; file=%s", __FUNCTION__, nbytes, filename);
     int fileStream = open (filename, O_RDONLY);
@@ -148,14 +150,14 @@ extern void nfa_nv_co_write(const UINT8 *pBuffer, UINT16 nbytes, UINT8 block)
 
     memset (filename, 0, sizeof(filename));
     memset (filename2, 0, sizeof(filename2));
-    strcpy(filename2, bcm_nfc_location);
-    strncat(filename2, sNfaStorageBin, sizeof(filename2)-strlen(filename2)-1);
+    strlcpy(filename2, bcm_nfc_location, sizeof(filename2));
+    strlcat(filename2, sNfaStorageBin, sizeof(filename2)-strlen(filename2)-1);
     if (strlen(filename2) > 200)
     {
         ALOGE ("%s: filename too long", __FUNCTION__);
         return;
     }
-    sprintf (filename, "%s%u", filename2, block);
+    snprintf (filename, 256, "%s%u", filename2, block);
     ALOGD ("%s: bytes=%u; file=%s", __FUNCTION__, nbytes, filename);
 
     int fileStream = 0;
@@ -209,22 +211,22 @@ void delete_stack_non_volatile_store (BOOLEAN forceDelete)
 
     memset (filename, 0, sizeof(filename));
     memset (filename2, 0, sizeof(filename2));
-    strcpy(filename2, bcm_nfc_location);
-    strncat(filename2, sNfaStorageBin, sizeof(filename2)-strlen(filename2)-1);
+    strlcpy(filename2, bcm_nfc_location, sizeof(filename2));
+    strlcat(filename2, sNfaStorageBin, sizeof(filename2)-strlen(filename2)-1);
     if (strlen(filename2) > 200)
     {
         ALOGE ("%s: filename too long", __FUNCTION__);
         return;
     }
-    sprintf (filename, "%s%u", filename2, DH_NV_BLOCK);
+    snprintf (filename, 256, "%s%u", filename2, DH_NV_BLOCK);
     remove (filename);
-    sprintf (filename, "%s%u", filename2, HC_F3_NV_BLOCK);
+    snprintf (filename, 256, "%s%u", filename2, HC_F3_NV_BLOCK);
     remove (filename);
-    sprintf (filename, "%s%u", filename2, HC_F4_NV_BLOCK);
+    snprintf (filename, 256, "%s%u", filename2, HC_F4_NV_BLOCK);
     remove (filename);
-    sprintf (filename, "%s%u", filename2, HC_F2_NV_BLOCK);
+    snprintf (filename, 256, "%s%u", filename2, HC_F2_NV_BLOCK);
     remove (filename);
-    sprintf (filename, "%s%u", filename2, HC_F5_NV_BLOCK);
+    snprintf (filename, 256, "%s%u", filename2, HC_F5_NV_BLOCK);
     remove (filename);
 }
 
@@ -247,27 +249,27 @@ void verify_stack_non_volatile_store ()
 
     memset (filename, 0, sizeof(filename));
     memset (filename2, 0, sizeof(filename2));
-    strcpy(filename2, bcm_nfc_location);
-    strncat(filename2, sNfaStorageBin, sizeof(filename2)-strlen(filename2)-1);
+    strlcpy(filename2, bcm_nfc_location, sizeof(filename2));
+    strlcat(filename2, sNfaStorageBin, sizeof(filename2)-strlen(filename2)-1);
     if (strlen(filename2) > 200)
     {
         ALOGE ("%s: filename too long", __FUNCTION__);
         return;
     }
 
-    sprintf (filename, "%s%u", filename2, DH_NV_BLOCK);
+    snprintf (filename, 256, "%s%u", filename2, DH_NV_BLOCK);
     if (crcChecksumVerifyIntegrity (filename))
     {
-        sprintf (filename, "%s%u", filename2, HC_F3_NV_BLOCK);
+        snprintf (filename, 256, "%s%u", filename2, HC_F3_NV_BLOCK);
         if (crcChecksumVerifyIntegrity (filename))
         {
-            sprintf (filename, "%s%u", filename2, HC_F4_NV_BLOCK);
+            snprintf (filename, 256, "%s%u", filename2, HC_F4_NV_BLOCK);
             if (crcChecksumVerifyIntegrity (filename))
             {
-                sprintf (filename, "%s%u", filename2, HC_F2_NV_BLOCK);
+                snprintf (filename, 256, "%s%u", filename2, HC_F2_NV_BLOCK);
                 if (crcChecksumVerifyIntegrity (filename))
                 {
-                    sprintf (filename, "%s%u", filename2, HC_F5_NV_BLOCK);
+                    snprintf (filename, 256, "%s%u", filename2, HC_F5_NV_BLOCK);
                     if (crcChecksumVerifyIntegrity (filename))
                         isValid = TRUE;
                 }

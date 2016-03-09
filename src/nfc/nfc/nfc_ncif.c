@@ -269,10 +269,13 @@ void nfc_ncif_cmd_timeout (void)
                 /* Flush the data if any before proceeding further with the recovery */
                 p_cb = nfc_find_conn_cb_by_conn_id(nfcc_dh_conn_id);
                 NFC_TRACE_ERROR1("connection id %d", nfcc_dh_conn_id);
-                status = NFC_FlushData(p_cb->conn_id);
-                if(status != NFC_STATUS_OK)
+                if(p_cb != NULL)
                 {
-                    NFC_TRACE_ERROR0 ("NFC data flush failed");
+                    status = NFC_FlushData(p_cb->conn_id);
+                    if(status != NFC_STATUS_OK)
+                    {
+                        NFC_TRACE_ERROR0 ("NFC data flush failed");
+                    }
                 }
             }
         }
