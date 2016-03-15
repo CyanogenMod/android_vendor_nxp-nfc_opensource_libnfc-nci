@@ -337,11 +337,10 @@ tNFA_STATUS nfa_hciu_send_msg (UINT8 pipe_id, UINT8 type, UINT8 instruction, UIN
                       pipe_id, type, instruction, msg_len);
 #endif
 
-    if(p_msg == NULL)
-        return NFA_STATUS_FAILED;
-
-    if (instruction == NFA_HCI_ANY_GET_PARAMETER)
+    if ((p_msg != NULL) && (instruction == NFA_HCI_ANY_GET_PARAMETER))
         nfa_hci_cb.param_in_use = *p_msg;
+    else if((p_msg == NULL) && (instruction == NFA_HCI_ANY_GET_PARAMETER))
+        return NFA_STATUS_FAILED;
 
     while ((first_pkt == TRUE) || (msg_len != 0))
     {
