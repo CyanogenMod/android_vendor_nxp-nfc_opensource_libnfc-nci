@@ -1,4 +1,9 @@
 /******************************************************************************
+ *  Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ *  Not a Contribution.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *  The original Work has been changed by NXP Semiconductors.
  *
  *  Copyright (C) 2010-2014 Broadcom Corporation
  *
@@ -15,25 +20,7 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-/******************************************************************************
- *
- *  The original Work has been changed by NXP Semiconductors.
- *
- *  Copyright (C) 2015 NXP Semiconductors
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- ******************************************************************************/
+
 /******************************************************************************
  *
  *  NFA interface to HCI
@@ -95,7 +82,7 @@ tNFA_STATUS NFA_HciRegister (char *p_app_name, tNFA_HCI_CBACK *p_cback, BOOLEAN 
 
         /* Save application name and callback */
         memset (p_msg->app_name, 0, sizeof (p_msg->app_name));
-        BCM_STRNCPY_S (p_msg->app_name, sizeof (p_msg->app_name), p_app_name, NFA_MAX_HCI_APP_NAME_LEN);
+        NQ_STRLCPY_S (p_msg->app_name, sizeof (p_msg->app_name), p_app_name, NFA_MAX_HCI_APP_NAME_LEN);
         p_msg->p_cback          = p_cback;
         p_msg->b_send_conn_evts = b_send_conn_evts;
 
@@ -202,7 +189,7 @@ tNFA_STATUS NFA_HciDeregister (char *p_app_name)
         p_msg->hdr.event  = NFA_HCI_API_DEREGISTER_APP_EVT;
 
         memset (p_msg->app_name, 0, sizeof (p_msg->app_name));
-        BCM_STRNCPY_S (p_msg->app_name, sizeof (p_msg->app_name), p_app_name, NFA_MAX_HCI_APP_NAME_LEN);
+        NQ_STRLCPY_S (p_msg->app_name, sizeof (p_msg->app_name), p_app_name, NFA_MAX_HCI_APP_NAME_LEN);
 
         nfa_sys_sendmsg (p_msg);
         return (NFA_STATUS_OK);

@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
+ *
  * Copyright (C) 2015 NXP Semiconductors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -878,8 +881,8 @@ NFCSTATUS phDnldNfc_InitImgInfo(void)
     /*Read Firmware file name from config file*/
     if(GetNxpStrValue(NAME_NXP_FW_NAME, fwFileName, sizeof(fwFileName)) == TRUE)
     {
-        strcpy(fwpathName, FW_DLL_ROOT_DIR);
-        strncat(fwpathName, fwFileName, strlen(fwFileName));
+        strlcpy(fwpathName, FW_DLL_ROOT_DIR, sizeof(fwpathName));
+        strlcat(fwpathName, fwFileName, sizeof(fwpathName));
         pathName = fwpathName;
     }
 

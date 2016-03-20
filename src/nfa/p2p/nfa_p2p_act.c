@@ -1,4 +1,6 @@
 /******************************************************************************
+ *  Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ *  Not a Contribution.
  *
  *  Copyright (C) 2010-2014 Broadcom Corporation
  *
@@ -687,7 +689,7 @@ BOOLEAN nfa_p2p_reg_server (tNFA_P2P_MSG *p_msg)
     {
         evt_data.reg_server.server_handle = NFA_HANDLE_INVALID;
         evt_data.reg_server.server_sap    = NFA_P2P_INVALID_SAP;
-        BCM_STRNCPY_S (evt_data.reg_server.service_name, sizeof (evt_data.reg_server.service_name),
+        NQ_STRLCPY_S (evt_data.reg_server.service_name, sizeof (evt_data.reg_server.service_name),
                        p_msg->api_reg_server.service_name, LLCP_MAX_SN_LEN);
         evt_data.reg_server.service_name[LLCP_MAX_SN_LEN] = 0;
 
@@ -711,7 +713,7 @@ BOOLEAN nfa_p2p_reg_server (tNFA_P2P_MSG *p_msg)
 
     evt_data.reg_server.server_handle = (NFA_HANDLE_GROUP_P2P | server_sap);
     evt_data.reg_server.server_sap    = server_sap;
-    BCM_STRNCPY_S (evt_data.reg_server.service_name, sizeof (evt_data.reg_server.service_name),
+    NQ_STRLCPY_S (evt_data.reg_server.service_name, sizeof (evt_data.reg_server.service_name),
                    p_msg->api_reg_server.service_name, LLCP_MAX_SN_LEN);
     evt_data.reg_server.service_name[LLCP_MAX_SN_LEN] = 0;
 
@@ -991,7 +993,7 @@ BOOLEAN nfa_p2p_create_data_link_connection (tNFA_P2P_MSG *p_msg)
     /* NFA_P2pConnectByName () */
     else
     {
-        BCM_STRNCPY_S (conn_params.sn, sizeof (conn_params.sn),
+        NQ_STRLCPY_S (conn_params.sn, sizeof (conn_params.sn),
                        p_msg->api_connect.service_name, LLCP_MAX_SN_LEN);
         conn_params.sn[LLCP_MAX_SN_LEN] = 0;
 

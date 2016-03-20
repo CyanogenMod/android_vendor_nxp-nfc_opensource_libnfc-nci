@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
+ *
  * Copyright (C) 2015 NXP Semiconductors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -249,7 +252,14 @@ NFCSTATUS phOsalNfc_Timer_Delete(uint32_t dwTimerId)
     uint32_t dwIndex;
     phOsalNfc_TimerHandle_t *pTimerHandle;
     dwIndex = dwTimerId - PH_NFC_TIMER_BASE_ADDRESS - 0x01;
-    pTimerHandle = (phOsalNfc_TimerHandle_t *)&apTimerInfo[dwIndex];
+    if(dwIndex < PH_NFC_MAX_TIMER)
+    {
+        pTimerHandle = (phOsalNfc_TimerHandle_t *)&apTimerInfo[dwIndex];
+    }
+    else
+    {
+        return PH_OSALNFC_TIMER_DELETE_ERROR;
+    }
     /* OSAL Module and Timer needs to be initialized for timer usage */
 
         /* Check whether the TimerId passed by user is valid and Deregistering of timer is successful */

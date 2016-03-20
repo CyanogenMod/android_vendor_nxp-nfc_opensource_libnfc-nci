@@ -475,7 +475,7 @@ tJBL_STATUS ALA_update_seq_handler(tJBL_STATUS (*seq_handler[])(Ala_ImageInfo_t*
 #if(NXP_LDR_SVC_VER_2 == TRUE)
     if(dest != NULL)
     {
-        strcat(update_info.fls_RespPath, dest);
+        strlcat(update_info.fls_RespPath, dest, sizeof(update_info.fls_RespPath));
         ALOGD("Loader Service response data path/destination: %s", dest);
         update_info.bytes_wrote = 0xAA;
     }
@@ -488,8 +488,7 @@ tJBL_STATUS ALA_update_seq_handler(tJBL_STATUS (*seq_handler[])(Ala_ImageInfo_t*
         return FALSE;
     }
 #endif
-    //memcpy(update_info.fls_path, (char*)Ala_path, sizeof(Ala_path));
-    strcat(update_info.fls_path, name);
+    strlcat(update_info.fls_path, name, sizeof(update_info.fls_path));
     ALOGD("Selected applet to install is: %s", update_info.fls_path);
 
     while((seq_handler[seq_counter]) != NULL )

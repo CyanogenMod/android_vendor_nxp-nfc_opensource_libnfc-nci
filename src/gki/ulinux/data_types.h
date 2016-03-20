@@ -1,4 +1,6 @@
 /******************************************************************************
+ *  Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ *  Not a Contribution.
  *
  *  Copyright (C) 1999-2012 Broadcom Corporation
  *
@@ -66,5 +68,6 @@ typedef unsigned char   UBYTE;
 #define BCM_STRNCPY_S(x1,x2,x3,x4)  strncpy((x1),(x3),(x4))
 #define BCM_SPRINTF_S(x1,x2,x3,x4)  sprintf((x1),(x3),(x4))
 #define BCM_VSPRINTF_S(x1,x2,x3,x4) vsprintf((x1),(x3),(x4))
+#define NQ_STRLCPY_S(x1,x2,x3,x4)   strlcpy((x1),(x3),(x2))
 
 #endif

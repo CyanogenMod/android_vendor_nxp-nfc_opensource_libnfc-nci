@@ -1,29 +1,15 @@
 /******************************************************************************
+ *  Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ *  Not a Contribution.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *  The original Work has been changed by NXP Semiconductors.
  *
  *  Copyright (C) 2010-2014 Broadcom Corporation
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at:
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- ******************************************************************************/
-/******************************************************************************
- *
- *  The original Work has been changed by NXP Semiconductors.
- *
- *  Copyright (C) 2015 NXP Semiconductors
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
  *
  *  http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -154,7 +140,7 @@ static void nfa_ee_trace_aid (char *p_str, UINT8 id,  UINT8 aid_len, UINT8 *p)
     }
     for (xx = 0; xx < len; xx++)
     {
-        yy += sprintf (&buff[yy], "%02x ", *p);
+        yy += snprintf (&buff[yy], 100, "%02x ", *p);
         p++;
     }
     NFA_TRACE_DEBUG4 ("%s id:0x%x len=%d aid:%s", p_str, id, aid_len, buff);
@@ -982,20 +968,20 @@ void nfa_ee_api_remove_aid(tNFA_EE_MSG *p_data)
         tNFA_EE_ECB *p_cb = nfa_ee_cb.ecb;
         for (xx = 0; xx < NFA_EE_MAX_EE_SUPPORTED; xx++, p_cb++)
         {
-            memset(&p_cb->aid_cfg[0],0x00, sizeof(p_cb->aid_cfg));
-            memset(&p_cb->aid_len[0], 0x00, sizeof(p_cb->aid_len));
-            memset(&p_cb->aid_pwr_cfg[0], 0x00, sizeof(p_cb->aid_pwr_cfg));
-            memset(&p_cb->aid_rt_info[0], 0x00, sizeof(p_cb->aid_rt_info));
+            memset(p_cb->aid_cfg,0x00, max_aid_entries);
+            memset(p_cb->aid_len, 0x00, max_aid_entries);
+            memset(p_cb->aid_pwr_cfg, 0x00, max_aid_entries);
+            memset(p_cb->aid_rt_info, 0x00, max_aid_entries);
             p_cb->aid_entries = 0;
             nfa_ee_cb.ee_cfged      |= nfa_ee_ecb_to_mask(p_cb);
         }
 
         tNFA_EE_ECB *p_ecb = &nfa_ee_cb.ecb[NFA_EE_CB_4_DH];
 
-        memset(&p_ecb->aid_cfg[0],0x00, sizeof(p_ecb->aid_cfg));
-        memset(&p_ecb->aid_len[0], 0x00, sizeof(p_ecb->aid_len));
-        memset(&p_ecb->aid_pwr_cfg[0], 0x00, sizeof(p_ecb->aid_pwr_cfg));
-        memset(&p_ecb->aid_rt_info[0], 0x00, sizeof(p_ecb->aid_rt_info));
+        memset(p_ecb->aid_cfg,0x00, max_aid_entries);
+        memset(p_ecb->aid_len, 0x00, max_aid_entries);
+        memset(p_ecb->aid_pwr_cfg, 0x00, max_aid_entries);
+        memset(p_ecb->aid_rt_info, 0x00, max_aid_entries);
         p_ecb->aid_entries = 0;
         p_cb->ecb_flags         |= NFA_EE_ECB_FLAGS_AID;
         nfa_ee_cb.ee_cfged      |= nfa_ee_ecb_to_mask(p_ecb);
