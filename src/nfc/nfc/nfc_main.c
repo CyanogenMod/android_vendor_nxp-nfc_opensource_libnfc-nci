@@ -475,12 +475,16 @@ void nfc_main_handle_hal_evt (tNFC_HAL_EVT_MSG *p_msg)
                     if(mGetCfg_info == NULL)
                     {
                         mGetCfg_info = (phNxpNci_getCfg_info_t*)malloc(sizeof(phNxpNci_getCfg_info_t));
-                        memset(mGetCfg_info,0x00,sizeof(phNxpNci_getCfg_info_t));
+                        if(mGetCfg_info != NULL)
+                            memset(mGetCfg_info,0x00,sizeof(phNxpNci_getCfg_info_t));
                     }
-                    nfc_cb.p_hal->ioctl(HAL_NFC_IOCTL_GET_CONFIG_INFO,(void *)mGetCfg_info);
-                    nfa_dm_init_cfgs(mGetCfg_info);
-                    free(mGetCfg_info);
-                    mGetCfg_info = NULL;
+                    if(mGetCfg_info != NULL)
+                    {
+                        nfc_cb.p_hal->ioctl(HAL_NFC_IOCTL_GET_CONFIG_INFO,(void *)mGetCfg_info);
+                        nfa_dm_init_cfgs(mGetCfg_info);
+                        free(mGetCfg_info);
+                        mGetCfg_info = NULL;
+                    }
 #endif
                 }
                 else /* if post initailization failed */

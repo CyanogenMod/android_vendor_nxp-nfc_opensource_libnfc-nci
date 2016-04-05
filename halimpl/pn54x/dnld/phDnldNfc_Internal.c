@@ -703,14 +703,13 @@ static NFCSTATUS phDnldNfc_BuildFramePkt(pphDnldNfc_DlContext_t pDlContext)
                         wFrameLen += PHDNLDNFC_FRAME_HDR_LEN;
                     }
                 }
-                if(wFrameLen > PHDNLDNFC_CMDRESP_MAX_BUFF_SIZE)
+                if(wFrameLen > PHDNLDNFC_CMDRESP_MAX_BUFF_SIZE - 2)
                 {
                     NXPLOG_FWDNLD_D("wFrameLen exceeds the limit");
                     return NFCSTATUS_FAILED;
                 }
                 /* calculate CRC16 */
-                if(wFrameLen <= PHDNLDNFC_CMDRESP_MAX_BUFF_SIZE)
-                    wCrcVal = phDnldNfc_CalcCrc16((pDlContext->tCmdRspFrameInfo.aFrameBuff),wFrameLen);
+                wCrcVal = phDnldNfc_CalcCrc16((pDlContext->tCmdRspFrameInfo.aFrameBuff),wFrameLen);
 
                 pFrameByte = (uint8_t *)&wCrcVal;
 

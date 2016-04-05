@@ -1049,7 +1049,7 @@ void GKI_exception (UINT16 code, char *msg)
         pExp =  &gki_cb.com.Exception[gki_cb.com.ExceptionCnt++];
         pExp->type = code;
         pExp->taskid = GKI_get_taskid();
-        strncpy((char *)pExp->msg, msg, GKI_MAX_EXCEPTION_MSGLEN - 1);
+        strlcpy((char *)pExp->msg, msg, GKI_MAX_EXCEPTION_MSGLEN - 1);
     }
 
     GKI_enable();

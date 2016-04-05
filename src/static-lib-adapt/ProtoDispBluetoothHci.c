@@ -1,4 +1,6 @@
 /******************************************************************************
+ *  Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ *  Not a Contribution.
  *
  *  Copyright (C) 2011-2012 Broadcom Corporation
  *
@@ -59,7 +61,7 @@ UINT8 *HCIDisp1Ext (char *p_descr, UINT8 *p_data, char * p_ext)
 
     char    buff[200];
 
-    sprintf (buff, "%40s : %u (0x%02x): %s", p_descr, *p_data, *p_data, p_ext);
+    snprintf (buff, 200, "%40s : %u (0x%02x): %s", p_descr, *p_data, *p_data, p_ext);
 
     ScrLog (HCI_GEN_TRACE, "%s", buff);
     return (p_data + 1);

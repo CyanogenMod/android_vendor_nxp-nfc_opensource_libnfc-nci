@@ -444,7 +444,7 @@ void *GKI_getbuf (UINT16 size)
 #if GKI_BUFFER_DEBUG
             LOGD("GKI_getbuf() allocated, %x, %x (%d of %d used) %d", (UINT8*)p_hdr + BUFFER_HDR_SIZE, p_hdr, Q->cur_cnt, Q->total, p_cb->freeq[i].total);
 
-            strncpy(p_hdr->_function, _function_, _GKI_MAX_FUNCTION_NAME_LEN);
+            strlcpy(p_hdr->_function, _function_, _GKI_MAX_FUNCTION_NAME_LEN);
             p_hdr->_function[_GKI_MAX_FUNCTION_NAME_LEN] = '\0';
             p_hdr->_line = _line_;
 #endif
@@ -558,7 +558,7 @@ void *GKI_getpoolbuf (UINT8 pool_id)
 #if GKI_BUFFER_DEBUG
         LOGD("GKI_getpoolbuf() allocated, %x, %x (%d of %d used) %d", (UINT8*)p_hdr + BUFFER_HDR_SIZE, p_hdr, Q->cur_cnt, Q->total, p_cb->freeq[pool_id].total);
 
-        strncpy(p_hdr->_function, _function_, _GKI_MAX_FUNCTION_NAME_LEN);
+        strlcpy(p_hdr->_function, _function_, _GKI_MAX_FUNCTION_NAME_LEN);
         p_hdr->_function[_GKI_MAX_FUNCTION_NAME_LEN] = '\0';
         p_hdr->_line = _line_;
 #endif
