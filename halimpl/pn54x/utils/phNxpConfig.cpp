@@ -93,10 +93,10 @@ public:
     int updateTimestamp();
     int checkTimestamp();
 
-    bool    getValue(const char* name, char* pValue, size_t len) const;
+    bool    getValue(const char* name, char* pValue, size_t& len) const;
     bool    getValue(const char* name, unsigned long& rValue) const;
     bool    getValue(const char* name, unsigned short & rValue) const;
-    bool    getValue(const char* name, char* pValue, long len,long* readlen) const;
+    bool    getValue(const char* name, char* pValue, unsigned long& len, long* readlen) const;
     const CNfcParam*    find(const char* p_name) const;
     void    clean();
 private:
@@ -476,7 +476,7 @@ CNfcConfig& CNfcConfig::GetInstance()
 **              false if setting does not exist
 **
 *******************************************************************************/
-bool CNfcConfig::getValue(const char* name, char* pValue, size_t len) const
+bool CNfcConfig::getValue(const char* name, char* pValue, size_t& len) const
 {
     const CNfcParam* pParam = find(name);
     if (pParam == NULL)
@@ -485,13 +485,15 @@ bool CNfcConfig::getValue(const char* name, char* pValue, size_t len) const
     if (pParam->str_len() > 0)
     {
         memset(pValue, 0, len);
-        memcpy(pValue, pParam->str_value(), pParam->str_len());
+        if (len > pParam->str_len() - 1)
+            len  = pParam->str_len() - 1;
+        memcpy(pValue, pParam->str_value(), len);
         return true;
     }
     return false;
 }
 
-bool CNfcConfig::getValue(const char* name, char* pValue, long len,long* readlen) const
+bool CNfcConfig::getValue(const char* name, char* pValue, unsigned long& len, long* readlen) const
 {
     const CNfcParam* pParam = find(name);
     if (pParam == NULL)
@@ -499,7 +501,7 @@ bool CNfcConfig::getValue(const char* name, char* pValue, long len,long* readlen
 
     if (pParam->str_len() > 0)
     {
-        if(pParam->str_len() <= (unsigned long)len)
+        if(pParam->str_len() <= len)
         {
             memset(pValue, 0, len);
             memcpy(pValue, pParam->str_value(), pParam->str_len());
@@ -904,14 +906,16 @@ void readOptionalConfig(const char* extra)
 **
 ** Description: API function for getting a string value of a setting
 **
-** Returns:     True if found, otherwise False.
+** Returns:     length if found, FALSE[0] otherwise.
 **
 *******************************************************************************/
-extern "C" int GetNxpStrValue(const char* name, char* pValue, unsigned long len)
+extern "C" int GetNxpStrValue(const char* name, char* pValue, unsigned long l)
 {
+    size_t len = l;
     nxp::CNfcConfig& rConfig = nxp::CNfcConfig::GetInstance();
 
-    return rConfig.getValue(name, pValue, len);
+    bool b = rConfig.getValue(name, pValue, len);
+    return b ? len : 0;
 }
 
 /*******************************************************************************
@@ -930,11 +934,11 @@ extern "C" int GetNxpStrValue(const char* name, char* pValue, unsigned long len)
 ** Returns:     TRUE[1] if config param name is found in the config file, else FALSE[0]
 **
 *******************************************************************************/
-extern "C" int GetNxpByteArrayValue(const char* name, char* pValue,long bufflen, long *len)
+extern "C" int GetNxpByteArrayValue(const char* name, char* pValue, unsigned long bufflen, long *len)
 {
     nxp::CNfcConfig& rConfig = nxp::CNfcConfig::GetInstance();
 
-    return rConfig.getValue(name, pValue, bufflen,len);
+    return rConfig.getValue(name, pValue, bufflen, len);
 }
 
 /*******************************************************************************

@@ -507,6 +507,8 @@ int phNxpNciHal_MinOpen(nfc_stack_callback_t *p_cback, nfc_stack_data_callback_t
     /*NCI_INIT_CMD*/
     uint8_t cmd_init_nci[] = {0x20,0x01,0x00};
     uint8_t boot_mode = nxpncihal_ctrl.hal_boot_mode;
+    const uint16_t max_len = 260; /* device node name is max of 255 bytes + 5 bytes (/dev/) */
+    char nfc_dev_node[max_len];
     phNxpLog_InitializeLogLevel();
 
 
@@ -525,7 +527,15 @@ int phNxpNciHal_MinOpen(nfc_stack_callback_t *p_cback, nfc_stack_data_callback_t
     memset(&nxpncihal_ctrl, 0x00, sizeof(nxpncihal_ctrl));
     memset(&tOsalConfig, 0x00, sizeof(tOsalConfig));
     memset(&tTmlConfig, 0x00, sizeof(tTmlConfig));
-    memset (&nxpprofile_ctrl, 0, sizeof(phNxpNciProfile_Control_t));
+    memset(&nxpprofile_ctrl, 0, sizeof(phNxpNciProfile_Control_t));
+    memset(nfc_dev_node, 0, sizeof(nfc_dev_node));
+
+    /* Read the nfc device node name */
+    if (!GetNxpStrValue (NAME_NXP_NFC_DEV_NODE, nfc_dev_node, sizeof(nfc_dev_node)))
+    {
+        strlcpy(nfc_dev_node, "/dev/nq-nci", sizeof(nfc_dev_node));
+        NXPLOG_NCIHAL_E("Invalid nfc device node name keeping the default device node %s", nfc_dev_node);
+    }
 
     /* By default HAL status is HAL_STATUS_OPEN */
     nxpncihal_ctrl.halStatus = HAL_STATUS_OPEN;
@@ -537,7 +547,7 @@ int phNxpNciHal_MinOpen(nfc_stack_callback_t *p_cback, nfc_stack_data_callback_t
     nxpncihal_ctrl.gDrvCfg.nClientId = phDal4Nfc_msgget(0, 0600);
     nxpncihal_ctrl.gDrvCfg.nLinkType = ENUM_LINK_TYPE_I2C;/* For PN54X */
     nxpncihal_ctrl.hal_boot_mode = boot_mode;
-    tTmlConfig.pDevName = (int8_t *) "/dev/nq-nci";
+    tTmlConfig.pDevName = nfc_dev_node;
     tOsalConfig.dwCallbackThreadId
     = (uintptr_t) nxpncihal_ctrl.gDrvCfg.nClientId;
     tOsalConfig.pLogFile = NULL;
@@ -628,8 +638,8 @@ int phNxpNciHal_open(nfc_stack_callback_t *p_cback, nfc_stack_data_callback_t *p
 {
     phOsalNfc_Config_t tOsalConfig;
     phTmlNfc_Config_t tTmlConfig;
-    uint8_t *nfc_dev_node = NULL;
     const uint16_t max_len = 260; /* device node name is max of 255 bytes + 5 bytes (/dev/) */
+    char nfc_dev_node[max_len];
     NFCSTATUS wConfigStatus = NFCSTATUS_SUCCESS;
     NFCSTATUS status = NFCSTATUS_SUCCESS;
 
@@ -681,7 +691,8 @@ int phNxpNciHal_open(nfc_stack_callback_t *p_cback, nfc_stack_data_callback_t *p
     memset(&nxpncihal_ctrl, 0x00, sizeof(nxpncihal_ctrl));
     memset(&tOsalConfig, 0x00, sizeof(tOsalConfig));
     memset(&tTmlConfig, 0x00, sizeof(tTmlConfig));
-    memset (&nxpprofile_ctrl, 0, sizeof(phNxpNciProfile_Control_t));
+    memset(&nxpprofile_ctrl, 0, sizeof(phNxpNciProfile_Control_t));
+    memset(nfc_dev_node, 0, sizeof(nfc_dev_node));
 
     /* By default HAL status is HAL_STATUS_OPEN */
     nxpncihal_ctrl.halStatus = HAL_STATUS_OPEN;
@@ -690,22 +701,16 @@ int phNxpNciHal_open(nfc_stack_callback_t *p_cback, nfc_stack_data_callback_t *p
     nxpncihal_ctrl.p_nfc_stack_data_cback = p_data_cback;
 
     /* Read the nfc device node name */
-    nfc_dev_node = (uint8_t*) malloc(max_len*sizeof(uint8_t));
-    if(nfc_dev_node == NULL)
+    if (!GetNxpStrValue (NAME_NXP_NFC_DEV_NODE, nfc_dev_node, sizeof(nfc_dev_node)))
     {
-        NXPLOG_NCIHAL_E("malloc of nfc_dev_node failed ");
-        goto clean_and_return;
-    }
-    else if (!GetNxpStrValue (NAME_NXP_NFC_DEV_NODE, nfc_dev_node, sizeof (nfc_dev_node)))
-    {
-        NXPLOG_NCIHAL_E("Invalid nfc device node name keeping the default device node /dev/nq-nci");
         strlcpy (nfc_dev_node, "/dev/nq-nci", sizeof(nfc_dev_node));
+        NXPLOG_NCIHAL_E("Invalid nfc device node name keeping the default device node %s", nfc_dev_node);
     }
 
     /* Configure hardware link */
     nxpncihal_ctrl.gDrvCfg.nClientId = phDal4Nfc_msgget(0, 0600);
     nxpncihal_ctrl.gDrvCfg.nLinkType = ENUM_LINK_TYPE_I2C;/* For PN54X */
-    tTmlConfig.pDevName = (uint8_t *) nfc_dev_node;
+    tTmlConfig.pDevName = nfc_dev_node;
     tOsalConfig.dwCallbackThreadId
     = (uintptr_t) nxpncihal_ctrl.gDrvCfg.nClientId;
     tOsalConfig.pLogFile = NULL;
@@ -717,14 +722,6 @@ int phNxpNciHal_open(nfc_stack_callback_t *p_cback, nfc_stack_data_callback_t *p
     {
         NXPLOG_NCIHAL_E("phTmlNfc_Init Failed");
         goto clean_and_return;
-    }
-    else
-    {
-        if(nfc_dev_node != NULL)
-        {
-            free(nfc_dev_node);
-            nfc_dev_node = NULL;
-        }
     }
 
     /* Create the client thread */
@@ -764,11 +761,6 @@ int phNxpNciHal_open(nfc_stack_callback_t *p_cback, nfc_stack_data_callback_t *p
 
     clean_and_return:
     CONCURRENCY_UNLOCK();
-    if(nfc_dev_node != NULL)
-    {
-        free(nfc_dev_node);
-        nfc_dev_node = NULL;
-    }
     /* Report error status */
     (*nxpncihal_ctrl.p_nfc_stack_cback)(HAL_NFC_OPEN_CPLT_EVT,
             HAL_NFC_STATUS_FAILED);
@@ -1154,7 +1146,7 @@ int phNxpNciHal_core_initialized(uint8_t* p_core_init_rsp_params)
     static uint8_t swp_switch_timeout_cmd[] = {0x20, 0x02, 0x06, 0x01, 0xA0, 0xF3, 0x02, 0x00, 0x00};
 
     uint8_t *buffer = NULL;
-    long bufflen = 260;
+    unsigned long bufflen = 260;
     long retlen = 0;
     int isfound;
 
