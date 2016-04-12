@@ -171,7 +171,7 @@ typedef struct phTmlNfc_Config
      *
      * e.g. On Linux based systems this would be /dev/PN54X
      */
-    int8_t *pDevName;
+    char* pDevName;
     /* Callback Thread ID
      *
      * This is the thread ID on which the Reader & Writer thread posts message. */
