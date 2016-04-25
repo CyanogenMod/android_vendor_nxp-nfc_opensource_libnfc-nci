@@ -1062,8 +1062,8 @@ NFCSTATUS request_EEPROM(phNxpNci_EEPROM_info_t *mEEPROM_info)
         {
 
             //Clear the buffer first
-            if(setCfgStartIndex < sizeof(set_cfg_eeprom))
-                memset(set_cfg_eeprom+setCfgStartIndex,0x00,sizeof(set_cfg_eeprom) - setCfgStartIndex);
+            if(setCfgStartIndex < set_cfg_cmd_len)
+                memset(set_cfg_eeprom+setCfgStartIndex, 0x00, set_cfg_cmd_len - setCfgStartIndex);
 
             //copy get config data into set_cfg_eeprom
             memcpy(set_cfg_eeprom+setCfgStartIndex, nxpncihal_ctrl.p_rx_data+getCfgStartIndex, fieldLen);
