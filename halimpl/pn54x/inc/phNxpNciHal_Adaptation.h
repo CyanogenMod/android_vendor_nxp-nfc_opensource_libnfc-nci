@@ -23,7 +23,7 @@
 #include <hardware/hardware.h>
 #include <hardware/nfc.h>
 
-#define NFC_NCI_NXP_PN54X_HARDWARE_MODULE_ID "nfc_nci.nqx"
+#define NFC_NCI_NXP_PN54X_HARDWARE_MODULE_ID "nfc_nci.pn54x"
 
 typedef struct
 {
