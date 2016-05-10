@@ -112,6 +112,10 @@ UINT8 nfa_ee_ce_p61_active = 0x00;
 static UINT16 max_routing_table_size;
 static UINT16 max_aid_config_length;
 static UINT16 max_aid_entries;
+#else
+#if (NFC_NXP_CHIP_TYPE == PN547C2)
+static UINT16 max_aid_entries = NFA_EE_MAX_AID_ENTRIES;
+#endif
 #endif
 #endif
 

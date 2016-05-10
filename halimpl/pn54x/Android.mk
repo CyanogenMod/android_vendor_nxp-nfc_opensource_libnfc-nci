@@ -45,7 +45,11 @@ D_CFLAGS += -DPN551=3
 endif
 
 #### Select the CHIP ####
+ifeq ($(BOARD_NFC_CHIPSET),pn547)
+NXP_CHIP_TYPE := $(PN547C2)
+else
 NXP_CHIP_TYPE := $(PN548C2)
+endif
 
 ifeq ($(NXP_CHIP_TYPE),$(PN547C2))
 D_CFLAGS += -DNFC_NXP_CHIP_TYPE=PN547C2
@@ -58,7 +62,7 @@ endif
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 ifeq ($(NXP_CHIP_TYPE),$(PN547C2))
-LOCAL_MODULE := nfc_nci_pn547.grouper
+LOCAL_MODULE := nfc_nci.pn54x.default
 else ifeq ($(NXP_CHIP_TYPE),$(PN548C2))
 LOCAL_MODULE := nfc_nci.nqx.default
 else ifeq ($(NXP_CHIP_TYPE),$(PN551))
