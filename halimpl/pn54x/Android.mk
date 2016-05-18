@@ -68,11 +68,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 LOCAL_PRELINK_MODULE := false
 LOCAL_ARM_MODE := arm
-ifeq ($(NXP_CHIP_TYPE),$(PN547C2))
 LOCAL_MODULE := nfc_nci.pn54x.default
-else ifeq ($(NXP_CHIP_TYPE),$(PN548C2))
-LOCAL_MODULE := nfc_nci.nqx.default
-endif
 LOCAL_MODULE_RELATIVE_PATH := hw
 LOCAL_SRC_FILES := $(call all-c-files-under, .)  $(call all-cpp-files-under, .)
 LOCAL_SHARED_LIBRARIES := liblog libcutils libhardware_legacy libdl
