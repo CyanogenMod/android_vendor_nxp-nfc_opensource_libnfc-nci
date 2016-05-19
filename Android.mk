@@ -1,3 +1,5 @@
+ifeq ($(TARGET_CUSTOM_NFC_HAL_PATH),"vendor/nxp-nfc/opensource/libnfc-nci")
+
 ifeq ($(strip $(TARGET_USES_NQ_NFC)),true)
 # function to find all *.cpp files under a directory
 define all-cpp-files-under
@@ -111,3 +113,5 @@ include $(BUILD_SHARED_LIBRARY)
 ######################################
 include $(call all-makefiles-under,$(LOCAL_PATH))
 endif
+
+endif # TARGET_CUSTOM_NFC_HAL_PATH
