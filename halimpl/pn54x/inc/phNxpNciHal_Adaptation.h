@@ -23,7 +23,11 @@
 #include <hardware/hardware.h>
 #include <hardware/nfc.h>
 
+#if(NFC_NXP_CHIP_TYPE == PN547C2)
 #define NFC_NCI_NXP_PN54X_HARDWARE_MODULE_ID "nfc_nci.pn54x"
+#else
+#define NFC_NCI_NXP_PN54X_HARDWARE_MODULE_ID "nfc_nci.nqx"
+#endif
 
 typedef struct
 {
