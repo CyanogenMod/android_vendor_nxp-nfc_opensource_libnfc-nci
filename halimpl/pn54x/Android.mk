@@ -39,10 +39,10 @@ NQ210 := $PN548C2
 NQ220 := $PN548C2
 #NXP PN547 Enable
 ifeq ($(PN547C2),1)
-LOCAL_CFLAGS += -DPN547C2=1
+D_CFLAGS += -DPN547C2=1
 endif
 ifeq ($(PN548C2),2)
-LOCAL_CFLAGS += -DPN548C2=2
+D_CFLAGS += -DPN548C2=2
 endif
 
 #### Select the CHIP ####
