@@ -3667,7 +3667,7 @@ BOOLEAN nfa_dm_p2p_prio_logic (UINT8 event, UINT8 *p, UINT8 event_type)
 #if(NXP_EXTNS == TRUE)
 void nfa_dm_p2p_prio_logic_disable ()
 {
-    if(&p2p_prio_logic_data.timer_list.in_use)
+    if(p2p_prio_logic_data.timer_list.in_use)
         nfc_stop_quick_timer (&p2p_prio_logic_data.timer_list);
     memset (&p2p_prio_logic_data, 0x00, sizeof(nfa_dm_p2p_prio_logic_t));
 }
