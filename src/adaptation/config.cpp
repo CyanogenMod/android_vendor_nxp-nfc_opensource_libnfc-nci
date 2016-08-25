@@ -420,7 +420,7 @@ CNfcConfig& CNfcConfig::GetInstance()
         strPath += config_name;
         theInstance.readConfig(strPath.c_str(), true);
 #if(NXP_EXTNS == TRUE)
-        readOptionalConfigExt("nxp");
+        readOptionalConfigExt("nxp_default");
 #endif
 
     }
