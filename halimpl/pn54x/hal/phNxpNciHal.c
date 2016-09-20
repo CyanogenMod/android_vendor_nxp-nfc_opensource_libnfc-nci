@@ -1368,6 +1368,26 @@ retry_core_init:
     mEEPROM_info.request_mode = GET_EEPROM_DATA;
     request_EEPROM(&mEEPROM_info);
 
+#if(NFC_NXP_CHIP_TYPE!=PN547C2 && (NXP_NFCC_ROUTING_BLOCK_BIT_PROP==TRUE))
+    if(isNxpConfigModified() || (fw_dwnld_flag == 0x01))
+    {
+        uint8_t value;
+        retlen = 0;
+        if(GetNxpNumValue(NAME_NXP_PROP_BLACKLIST_ROUTING, (void *)&retlen, sizeof(retlen)))
+        {
+            if(retlen == 0x00 || retlen == 0x01)
+            {
+                value = (uint8_t)retlen;
+                mEEPROM_info.buffer = &value;
+                mEEPROM_info.bufflen = sizeof(value);
+                mEEPROM_info.request_type = EEPROM_PROP_ROUTING;
+                mEEPROM_info.request_mode = SET_EEPROM_DATA;
+                status = request_EEPROM(&mEEPROM_info);
+            }
+        }
+    }
+#endif
+
 #if((NFC_NXP_CHIP_TYPE != PN547C2) && (NXP_ESE_DUAL_MODE_PRIO_SCHEME == NXP_ESE_WIRED_MODE_RESUME))
     if(isNxpConfigModified() || (fw_dwnld_flag == 0x01))
     {
