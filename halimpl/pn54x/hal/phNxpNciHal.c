@@ -350,7 +350,7 @@ static NFCSTATUS phNxpNciHal_CheckValidFwVersion(void)
 
     NXPLOG_NCIHAL_D("%s current_major_no = 0x%x", __FUNCTION__,ufw_current_major_no );
 
-    if(( ufw_current_major_no == FW_MOBILE_MAJOR_NUMBER))
+    if(ufw_current_major_no == FW_MOBILE_MAJOR_NUMBER)
     {
         status = NFCSTATUS_SUCCESS;
     }
@@ -2531,7 +2531,7 @@ int phNxpNciHal_close(void)
     if (!(GetNxpNumValue(NAME_NXP_UICC_LISTEN_TECH_MASK, &uiccListenMask, sizeof(uiccListenMask))))
     {
         uiccListenMask = 0x07;
-        NXPLOG_NCIHAL_D ("UICC_LISTEN_TECH_MASK = 0x%0X", uiccListenMask);
+        NXPLOG_NCIHAL_D ("UICC_LISTEN_TECH_MASK = 0x%0lX", uiccListenMask);
     }
 
     if(nxpncihal_ctrl.hal_boot_mode == NFC_FAST_BOOT_MODE)
