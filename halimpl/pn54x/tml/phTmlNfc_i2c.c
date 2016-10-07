@@ -367,10 +367,36 @@ NFCSTATUS phTmlNfc_set_pid(void *pDevHandle, long pid)
         return NFCSTATUS_FAILED;
     }
 
-    ret = ioctl((intptr_t)pDevHandle, PN544_SET_NFC_SERVICE_PID, pid);
+    ret = ioctl((intptr_t)pDevHandle, P544_SET_NFC_SERVICE_PID, pid);
     return ret;
 }
 
+/*******************************************************************************
+**
+** Function         phTmlNfc_set_power_scheme
+**
+** Description      This function sets the eSE power scheme in pn544 driver
+**
+** Parameters       pDevHandle     - valid device handle
+**                        pid - nfc service pid
+**
+** Returns          p61_access_state_t  - get_p61_power operation success
+**                  P61_STATE_INVALID   - get_p61_power operation failure
+**
+*******************************************************************************/
+NFCSTATUS phTmlNfc_set_power_scheme(void *pDevHandle, long id)
+{
+    int ret;
+    NXPLOG_TML_D("phTmlNfc_set_power_scheme(), id  %ld", id);
+
+    if (NULL == pDevHandle)
+    {
+        return NFCSTATUS_FAILED;
+    }
+
+    ret = ioctl((intptr_t)pDevHandle, P544_SET_POWER_SCHEME, id);
+    return ret;
+}
 /*******************************************************************************
 **
 ** Function         phTmlNfc_i2c_set_p61_power_state
@@ -478,7 +504,7 @@ NFCSTATUS phTmlNfc_get_ese_access(void *pDevHandle, long timeout)
         return NFCSTATUS_FAILED;
     }
 
-    ret = ioctl((intptr_t)pDevHandle, PN544_GET_ESE_ACCESS, timeout);
+    ret = ioctl((intptr_t)pDevHandle, P544_GET_ESE_ACCESS, timeout);
     if (ret < 0)
     {
         if (ret == -EBUSY)
@@ -490,6 +516,41 @@ NFCSTATUS phTmlNfc_get_ese_access(void *pDevHandle, long timeout)
     return status;
 }
 
+#if ((NFC_NXP_CHIP_TYPE == PN548C2) || (NFC_NXP_CHIP_TYPE == PN551))
+/*******************************************************************************
+**
+** Function         phTmlNfc_rel_svdd_wait
+**
+** Description
+**
+** Parameters       pDevHandle     - valid device handle
+**
+** Returns          success or failure
+**
+*******************************************************************************/
+NFCSTATUS phTmlNfc_rel_svdd_wait(void *pDevHandle)
+{
+    int ret = -1;
+    NFCSTATUS status = NFCSTATUS_SUCCESS;
+    NXPLOG_TML_D("phTmlNfc_rel_svdd_wait(), enter ");
+
+    if (NULL == pDevHandle)
+    {
+        return NFCSTATUS_FAILED;
+    }
+
+    ret = ioctl((intptr_t)pDevHandle, P544_REL_SVDD_WAIT);
+    if (ret < 0)
+    {
+        if (ret == -EBUSY)
+            ret = NFCSTATUS_BUSY;
+        else
+            ret = NFCSTATUS_FAILED;
+    }
+    NXPLOG_TML_D("phTmlNfc_rel_svdd_wait(), exit  ret %d, status %d", ret, status);
+    return status;
+}
+#endif
 #endif
 /*******************************************************************************
 **

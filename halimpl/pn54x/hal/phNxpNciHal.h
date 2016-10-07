@@ -21,6 +21,7 @@
 
 #include <hardware/nfc.h>
 #include <phNxpNciHal_utils.h>
+#include <NXP_ESE_Features.h>
 
 /********************* Definitions and structures *****************************/
 #define MAX_RETRY_COUNT       5
@@ -55,7 +56,9 @@ enum {
     HAL_NFC_IOCTL_DISABLE_HAL_LOG,
     HAL_NFC_IOCTL_NCI_TRANSCEIVE,
     HAL_NFC_IOCTL_P61_GET_ACCESS,
-    HAL_NFC_IOCTL_P61_REL_ACCESS
+    HAL_NFC_IOCTL_P61_REL_ACCESS,
+    HAL_NFC_IOCTL_P73_ISO_RST,
+    HAL_NFC_IOCTL_REL_SVDD_WAIT
 };
 
 typedef void (phNxpNciHal_control_granted_callback_t)();
@@ -98,6 +101,8 @@ typedef struct phNxpNciHal_Control
 
     /* HAL open status */
     bool_t hal_open_status;
+
+    bool_t is_wait_for_ce_ntf;
 
     /* HAL extensions */
     uint8_t hal_ext_enabled;
@@ -151,7 +156,12 @@ static const uint8_t get_cfg_arr[]={
 
 typedef enum {
     EEPROM_RF_CFG,
-    EEPROM_FW_DWNLD
+    EEPROM_FW_DWNLD,
+    EEPROM_WIREDMODE_RESUME_ENABLE,
+    EEPROM_WIREDMODE_RESUME_TIMEOUT,
+    EEPROM_ESE_SVDD_POWER,
+    EEPROM_ESE_POWER_EXT_PMU,
+    EEPROM_PROP_ROUTING
 }phNxpNci_EEPROM_request_type_t;
 
 typedef struct phNxpNci_EEPROM_info {
@@ -210,6 +220,7 @@ void phNxpNciHal_request_control (void);
 void phNxpNciHal_release_control (void);
 NFCSTATUS phNxpNciHal_send_get_cfgs();
 int phNxpNciHal_write_unlocked (uint16_t data_len, const uint8_t *p_data);
+static int phNxpNciHal_fw_mw_ver_check();
 NFCSTATUS request_EEPROM(phNxpNci_EEPROM_info_t *mEEPROM_info);
 
 #endif /* _PHNXPNCIHAL_H_ */

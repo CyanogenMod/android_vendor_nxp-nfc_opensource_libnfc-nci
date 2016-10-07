@@ -533,13 +533,22 @@ void nfa_hci_dh_startup_complete (void)
         if (nfa_hci_cb.hci_state == NFA_HCI_STATE_STARTUP)
         {
             nfa_hci_cb.hci_state = NFA_HCI_STATE_WAIT_NETWK_ENABLE;
-            /* Check if all EEs are discovered already*/
+            /* Check if all EEs are discovered already and minimum 1 disc_req_ntf is received
+             * If atleast 1 disc_req_ntf is received then 150ms time will be started for the next disc_req_ntf
+             * So no need to start 2s timer to wait for first disc_req_ntf.
+             * */
             if(nfa_ee_cb.cur_ee == nfa_ee_max_ee_cfg)
             {
                 while(ee_entry_index < nfa_ee_max_ee_cfg)
                 {
                     /*Check if host discovered is inactive*/
                     if((nfa_ee_cb.ecb[ee_entry_index].nfcee_id == NFA_EE_INTERFACE_HCI_ACCESS)&&(nfa_ee_cb.ecb[ee_entry_index].ee_status == NFA_EE_STATUS_INACTIVE))
+                    {
+                        break;
+                    }
+                    if((nfa_ee_cb.ecb[ee_entry_index].nfcee_id != NFA_EE_INTERFACE_HCI_ACCESS) &&
+                             (nfa_ee_cb.ecb[ee_entry_index].ee_status == NFA_EE_STATUS_ACTIVE) &&
+                             (nfa_hci_cb.num_ee_dis_req_ntf == 0))
                     {
                         break;
                     }
@@ -608,6 +617,16 @@ void nfa_hci_startup_complete (tNFA_STATUS status)
         nfa_ee_proc_hci_info_cback ();
         nfa_sys_cback_notify_nfcc_power_mode_proc_complete (NFA_ID_HCI);
     }
+#if(NXP_EXTNS == TRUE)
+    else if(nfa_hci_cb.hci_state == NFA_HCI_STATE_NFCEE_ENABLE)
+    {
+        nfa_hci_cb.hci_state = NFA_HCI_STATE_IDLE;
+        evt_data.admin_rsp_rcvd.status = status;
+        evt_data.admin_rsp_rcvd.NoHostsPresent = 0;
+        nfa_hciu_send_to_all_apps (NFA_HCI_RSP_SENT_ADMIN_EVT, &evt_data);
+        return;
+    }
+#endif
     else
     {
         evt_data.hci_init.status = status;
@@ -1218,6 +1237,9 @@ void nfa_hci_rsp_timeout (tNFA_HCI_EVENT_DATA *p_evt_data)
     {
     case NFA_HCI_STATE_STARTUP:
     case NFA_HCI_STATE_RESTORE:
+#if (NXP_EXTNS == TRUE)
+    case NFA_HCI_STATE_NFCEE_ENABLE:
+#endif
         NFA_TRACE_ERROR0 ("nfa_hci_rsp_timeout - Initialization failed!");
         nfa_hci_startup_complete (NFA_STATUS_TIMEOUT);
         break;
@@ -1549,6 +1571,7 @@ static BOOLEAN nfa_hci_evt_hdlr (BT_HDR *p_msg)
 
         case NFA_HCI_RSP_TIMEOUT_EVT:
 #if ((NXP_EXTNS == TRUE)&&(NFC_NXP_ESE == TRUE))
+#if (JCOP_WA_ENABLE == TRUE)
         if(nfa_ee_ce_p61_completed != 0)
         {
             NFA_TRACE_EVENT0("nfa_hci_evt_hdlr Restart timer expired for wired transceive");
@@ -1573,6 +1596,7 @@ static BOOLEAN nfa_hci_evt_hdlr (BT_HDR *p_msg)
                 }
             }
         }
+#endif
 #endif
             nfa_hci_rsp_timeout ((tNFA_HCI_EVENT_DATA *)p_msg);
             break;

@@ -33,7 +33,7 @@ static void *pFwLibHandle; /* Global firmware lib handle used in this file only 
 uint16_t wMwVer = 0; /* Middleware version no */
 uint16_t wFwVer = 0; /* Firmware version no */
 #if(NFC_NXP_CHIP_TYPE != PN547C2)
-uint8_t gRecFWDwnld; // flag set to true to indicate dummy FW download
+uint8_t gRecFWDwnld; /* flag set to true to indicate dummy FW download */
 #endif
 static pphDnldNfc_DlContext_t gpphDnldContext = NULL; /* Download contex */
 static pphDnldNfc_RspCb_t      UserCb; /* Upper layer call back function */
@@ -288,9 +288,11 @@ NFCSTATUS phDnldNfc_CheckIntegrity(uint8_t bChipVer, pphDnldNfc_Buff_t pCRCData,
         {
             if((PHDNLDNFC_HWVER_MRA2_1 == bChipVer) || (PHDNLDNFC_HWVER_MRA2_2 == bChipVer)
 #if(NFC_NXP_CHIP_TYPE == PN551)
-              || (PHDNLDNFC_HWVER_PN551_MRA1_0 == bChipVer)
+              || (PHDNLDNFC_HWVER_PN551_MRA1_0 == bChipVer)  || (PHDNLDNFC_HWVER_PN553_MRA1_0 == bChipVer)
 #elif(NFC_NXP_CHIP_TYPE == PN548C2)
               || (PHDNLDNFC_HWVER_PN548AD_MRA1_0 == bChipVer)
+#elif(NFC_NXP_CHIP_TYPE == PN553)
+              || (PHDNLDNFC_HWVER_PN553_MRA1_0 == bChipVer) || (PHDNLDNFC_HWVER_PN553_MRA1_0_UPDATED == bChipVer)
 #endif
                 )
             {
@@ -1118,6 +1120,8 @@ NFCSTATUS phDnldNfc_LoadFW(const char* pathName, uint8_t **pImgInfo, uint16_t* p
         pathName = "/system/vendor/firmware/libpn548ad_fw.so";
 #elif(NFC_NXP_CHIP_TYPE == PN551)
         pathName = "/system/vendor/firmware/libpn551_fw.so";
+#elif(NFC_NXP_CHIP_TYPE == PN553)
+        pathName = "/system/vendor/firmware/libpn553_fw.so";
 #else
         pathName = "/system/vendor/firmware/libpn547_fw.so";
 #endif
@@ -1193,6 +1197,8 @@ NFCSTATUS phDnldNfc_LoadRecoveryFW(const char* pathName, uint8_t **pImgInfo, uin
         pathName = "/system/vendor/firmware/libpn548ad_fw.so";
 #elif(NFC_NXP_CHIP_TYPE == PN551)
         pathName = "/system/vendor/firmware/libpn551_fw.so";
+#elif(NFC_NXP_CHIP_TYPE == PN553)
+        pathName = "/system/vendor/firmware/libpn553_fw.so";
 #else
         pathName = "/system/vendor/firmware/libpn547_fw.so";
 #endif

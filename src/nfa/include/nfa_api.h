@@ -57,7 +57,7 @@
 **  Constants and data types
 *****************************************************************************/
 
-/* Max length of Appliction ID in 7816-4 */
+/* Max length of Application ID in 7816-4 */
 #define NFA_MAX_AID_LEN     NFC_MAX_AID_LEN
 #define NFA_MIN_AID_LEN     5 /* per NCI specification */
 
@@ -278,7 +278,8 @@ typedef enum
 {
     NFA_DTA_DEFAULT_MODE=0,
     NFA_DTA_LLCP_MODE,
-    NFA_DTA_SNEP_MODE
+    NFA_DTA_SNEP_MODE,
+    NFA_DTA_HCEF_MODE
 }tNFA_eDtaModes;
 typedef struct
 {
@@ -335,7 +336,7 @@ typedef struct
 #define NFA_ACTIVATED_UPDATE_EVT                41  /* Activated intf for updating the   tech variables */
 #define NFA_RECOVERY_EVT                        42  /*Recovery*/
 #endif
-
+#define NFA_PASSIVE_LISTEN_DISABLED_EVT         44  /* Passive Listening disabled event                     */
 /* NFC deactivation type */
 #define NFA_DEACTIVATE_TYPE_IDLE        NFC_DEACTIVATE_TYPE_IDLE
 #define NFA_DEACTIVATE_TYPE_SLEEP       NFC_DEACTIVATE_TYPE_SLEEP
@@ -986,6 +987,23 @@ NFC_API extern tNFA_STATUS NFA_EnableListening (void);
 **
 *******************************************************************************/
 NFC_API extern tNFA_STATUS NFA_DisableListening (void);
+
+/*******************************************************************************
+**
+** Function         NFA_DisablePassiveListening
+**
+** Description      Disable Passive listening
+**                  NFA_PASSIVE_LISTEN_DISABLED_EVT will be returned after stopping listening.
+**                  This function is called to exclude Passive listen at eSE wired mode enable session.
+**
+** Note:            If RF discovery is started, NFA_StopRfDiscovery()/NFA_RF_DISCOVERY_STOPPED_EVT
+**                  should happen before calling this function
+**
+** Returns          NFA_STATUS_OK if successfully initiated
+**                  NFA_STATUS_FAILED otherwise
+**
+*******************************************************************************/
+NFC_API extern tNFA_STATUS NFA_DisablePassiveListening (void);
 
 /*******************************************************************************
 **
