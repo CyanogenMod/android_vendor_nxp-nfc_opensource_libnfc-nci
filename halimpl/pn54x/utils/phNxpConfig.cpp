@@ -323,21 +323,21 @@ int CNfcConfig::getconfiguration_id (char * config_file)
         case TARGET_MSM8917:
         case TARGET_MSM8940:
             config_id = QRD_TYPE_DEFAULT;
-            strncpy(config_file, config_name_qrd, MAX_DATA_CONFIG_PATH_LEN);
+            strlcpy(config_file, config_name_qrd, MAX_DATA_CONFIG_PATH_LEN);
             break;
         case TARGET_MSM8976:
         case TARGET_MSM8996:
-            strncpy(config_file, config_name_qrd1, MAX_DATA_CONFIG_PATH_LEN);
+            strlcpy(config_file, config_name_qrd1, MAX_DATA_CONFIG_PATH_LEN);
             config_id = QRD_TYPE_1;
             break;
         case TARGET_MSM8998:
         case TARGET_MSM8997:
             config_id = QRD_TYPE_2;
-            strncpy(config_file, config_name_qrd2, MAX_DATA_CONFIG_PATH_LEN);
+            strlcpy(config_file, config_name_qrd2, MAX_DATA_CONFIG_PATH_LEN);
             break;
         default:
             config_id = QRD_TYPE_DEFAULT;
-            strncpy(config_file, config_name_qrd, MAX_DATA_CONFIG_PATH_LEN);
+            strlcpy(config_file, config_name_qrd, MAX_DATA_CONFIG_PATH_LEN);
             break;
         }
     }
@@ -351,11 +351,11 @@ int CNfcConfig::getconfiguration_id (char * config_file)
         case TARGET_MSM8998:
         case TARGET_MSM8997:
             config_id = MTP_TYPE_1;
-            strncpy(config_file, config_name_mtp1, MAX_DATA_CONFIG_PATH_LEN);
+            strlcpy(config_file, config_name_mtp1, MAX_DATA_CONFIG_PATH_LEN);
             break;
         default:
             config_id = MTP_TYPE_DEFAULT;
-            strncpy(config_file, config_name_mtp, MAX_DATA_CONFIG_PATH_LEN);
+            strlcpy(config_file, config_name_mtp, MAX_DATA_CONFIG_PATH_LEN);
             break;
         }
     }
