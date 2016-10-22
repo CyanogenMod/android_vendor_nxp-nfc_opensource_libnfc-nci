@@ -354,7 +354,6 @@ void nfc_ce_t3t_set_listen_params (void)
             UINT8_TO_STREAM (p_params, NCI_PARAM_LEN_LF_T3T_ID);                     /* length */
             UINT16_TO_BE_STREAM (p_params, p_cb->listen_info[i].t3t_system_code);    /* System Code */
             ARRAY_TO_BE_STREAM (p_params,  p_cb->listen_info[i].t3t_nfcid2, NCI_RF_F_UID_LEN);
-
             /* Set mask for this ID */
             t3t_flags2_mask &= ~((UINT16) (1<<t3t_idx));
             t3t_idx++;
@@ -381,7 +380,12 @@ void nfc_ce_t3t_set_listen_params (void)
     UINT16_TO_STREAM (p_params, t3t_flags2_mask);            /* Mask of IDs to disable listening */
 #endif
     tlv_size = (UINT8) (p_params-tlv);
+
+    if(appl_dta_mode_flag == 0x01){
+        nfa_dm_cb.eDtaMode = NFA_DTA_HCEF_MODE;
+    }
     nfa_dm_check_set_config (tlv_size, (UINT8 *)tlv, FALSE);
+
 }
 
 /*******************************************************************************
@@ -428,6 +432,7 @@ tNFA_STATUS nfa_ce_start_listening (void)
     tNFA_HANDLE   disc_handle;
     UINT8         listen_info_idx;
 
+    NFA_TRACE_DEBUG0 ("nfa_ce_start_listening(): enter");
     /*************************************************************************/
     /* Construct protocol preference list to listen for */
 
@@ -560,7 +565,7 @@ tNFA_STATUS nfa_ce_start_listening (void)
 #endif
         }
     }
-
+    NFA_TRACE_DEBUG0 ("nfa_ce_start_listening(): exit");
     return NFA_STATUS_OK;
 }
 
@@ -1326,9 +1331,9 @@ BOOLEAN nfa_ce_api_reg_listen (tNFA_CE_MSG *p_ce_msg)
     UINT8 listen_info_idx = NFA_CE_LISTEN_INFO_IDX_INVALID;
 
 #if(NXP_EXTNS == TRUE)
-    NFA_TRACE_DEBUG1 ("Registering UICC/ESE/Felica/Type-4 tag listener. Type=%i", p_ce_msg->reg_listen.listen_type);
+    NFA_TRACE_DEBUG1 ("nfa_ce_api_reg_listen ():Registering UICC/ESE/Felica/Type-4 tag listener. Type=%i", p_ce_msg->reg_listen.listen_type);
 #else
-    NFA_TRACE_DEBUG1 ("Registering UICC/Felica/Type-4 tag listener. Type=%i", p_ce_msg->reg_listen.listen_type);
+    NFA_TRACE_DEBUG1 ("nfa_ce_api_reg_listen ():Registering UICC/Felica/Type-4 tag listener. Type=%i", p_ce_msg->reg_listen.listen_type);
 #endif
 
     /* Look for available entry in listen_info table                                        */
@@ -1365,6 +1370,7 @@ BOOLEAN nfa_ce_api_reg_listen (tNFA_CE_MSG *p_ce_msg)
                  &&(listen_info_idx == NFA_CE_LISTEN_INFO_IDX_INVALID)  )
         {
             listen_info_idx = i;
+            NFA_TRACE_DEBUG1 ("nfa_ce_api_reg_listen ():found free entry listen_info_idx = %d", listen_info_idx);
         }
     }
 

@@ -2392,20 +2392,19 @@ void rw_t3t_conn_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_data)
         break;
 
     case NFC_DATA_CEVT:     /* check for status in tNFC_CONN */
-        if (  (p_data->data.status == NFC_STATUS_OK)
-            ||(p_data->data.status == NFC_STATUS_CONTINUE)  )
+        if (  (p_data != NULL)
+            &&(  (p_data->data.status == NFC_STATUS_OK)
+               ||(p_data->data.status == NFC_STATUS_CONTINUE)  )  )
         {
             rw_t3t_data_cback (conn_id, &(p_data->data));
             break;
         }
-        else
+        else if (p_data->data.p_data != NULL)
         {
             RW_TRACE_DEBUG2 ("rw_t3t_conn_cback: p_data->data.p_data=0x%X p_data->data.status=0x%02x", p_data->data.p_data, p_data->data.status);
-            if(p_data->data.p_data)
-            {
-                GKI_freebuf(p_data->data.p_data);
-                p_data->data.p_data = NULL;
-            }
+            /* Free the response buffer in case of error response */
+            GKI_freebuf ((BT_HDR *) (p_data->data.p_data));
+            p_data->data.p_data = NULL;
         }
         /* Data event with error status...fall through to NFC_ERROR_CEVT case */
 
@@ -2419,7 +2418,7 @@ void rw_t3t_conn_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_data)
 
         if (event == NFC_ERROR_CEVT)
             rw_t3t_process_error (NFC_STATUS_TIMEOUT);
-        else
+        else if(p_data)
             rw_t3t_process_error (p_data->status);
 #if(NXP_EXTNS == TRUE)
         if(p_data != NULL)

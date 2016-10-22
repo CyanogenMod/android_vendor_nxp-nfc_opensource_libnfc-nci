@@ -44,7 +44,11 @@ phTmlNfc_i2cfragmentation_t fragmentation_enabled;
 NFCSTATUS phTmlNfc_i2c_get_p61_power_state(void *pDevHandle);
 NFCSTATUS phTmlNfc_i2c_set_p61_power_state(void *pDevHandle, long arg);
 NFCSTATUS phTmlNfc_set_pid(void *pDevHandle, long pid);
-
+NFCSTATUS phTmlNfc_set_power_scheme(void *pDevHandle, long id);
+NFCSTATUS phTmlNfc_get_ese_access(void *pDevHandle, long timeout);
+#if ((NFC_NXP_CHIP_TYPE == PN548C2) || (NFC_NXP_CHIP_TYPE == PN551))
+NFCSTATUS phTmlNfc_rel_svdd_wait(void *pDevHandle);
+#endif
 /*
  * SPI Request NFCC to enable p61 power, only in param
  * Only for SPI
@@ -68,10 +72,20 @@ NFCSTATUS phTmlNfc_set_pid(void *pDevHandle, long pid);
 /*
   NFC Init will call the ioctl to register the PID with the i2c driver
 */
-#define PN544_SET_NFC_SERVICE_PID _IOW(PN544_MAGIC, 0x05, long)
+#define P544_SET_NFC_SERVICE_PID _IOW(PN544_MAGIC, 0x05, long)
 
 /*
   NFC and SPI will call the ioctl to get the i2c/spi bus access
 */
-#define PN544_GET_ESE_ACCESS _IOW(PN544_MAGIC, 0x06, long)
+#define P544_GET_ESE_ACCESS _IOW(PN544_MAGIC, 0x06, long)
+
+/*
+  NFC and SPI will call the ioctl to update the power scheme
+*/
+#define P544_SET_POWER_SCHEME _IOW(PN544_MAGIC, 0x07, long)
+
+/*
+  NFC will call the ioctl to release the svdd protection
+*/
+#define P544_REL_SVDD_WAIT _IOW(PN544_MAGIC, 0x08, long)
 #endif

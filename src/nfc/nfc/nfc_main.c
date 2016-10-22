@@ -52,8 +52,8 @@
 #include "llcp_int.h"
 
 #if(NXP_EXTNS == TRUE)
-phNxpNci_getCfg_info_t* mGetCfg_info = NULL;
-extern void nfa_dm_init_cfgs (phNxpNci_getCfg_info_t* mGetCfg_info);
+static phNxpNci_getCfg_info_t* mGetCfg_info_main = NULL;
+extern void nfa_dm_init_cfgs (phNxpNci_getCfg_info_t* mGetCfg_info_main);
 #endif
 
 /* NFC mandates support for at least one logical connection;
@@ -462,16 +462,16 @@ void nfc_main_handle_hal_evt (tNFC_HAL_EVT_MSG *p_msg)
                      * During Setconfig request these stored values are compared
                      * If found same setconfigs will not be sent
                      * */
-                    if(mGetCfg_info == NULL)
+                    if(mGetCfg_info_main == NULL)
                     {
-                        mGetCfg_info = (phNxpNci_getCfg_info_t*)malloc(sizeof(phNxpNci_getCfg_info_t));
-                        if(mGetCfg_info  != NULL)
+                        mGetCfg_info_main = (phNxpNci_getCfg_info_t*)malloc(sizeof(phNxpNci_getCfg_info_t));
+                        if(mGetCfg_info_main  != NULL)
                         {
-                            memset(mGetCfg_info,0x00,sizeof(phNxpNci_getCfg_info_t));
-                            nfc_cb.p_hal->ioctl(HAL_NFC_IOCTL_GET_CONFIG_INFO,(void *)mGetCfg_info);
-                            nfa_dm_init_cfgs(mGetCfg_info);
-                            free(mGetCfg_info);
-                            mGetCfg_info = NULL;
+                            memset(mGetCfg_info_main,0x00,sizeof(phNxpNci_getCfg_info_t));
+                            nfc_cb.p_hal->ioctl(HAL_NFC_IOCTL_GET_CONFIG_INFO,(void *)mGetCfg_info_main);
+                            nfa_dm_init_cfgs(mGetCfg_info_main);
+                            free(mGetCfg_info_main);
+                            mGetCfg_info_main = NULL;
                         }
                     }
 #endif
@@ -1011,7 +1011,11 @@ tNFC_STATUS NFC_DiscoveryMap (UINT8 num, tNFC_DISCOVER_MAPS *p_maps,
         {
             for (yy = 0; yy < NFC_NFCC_MAX_NUM_VS_INTERFACE; yy++)
             {
-                if (nfc_cb.vs_interface[yy] == p_maps[xx].intf_type)
+#if(NXP_NFCC_FW_WA == TRUE)
+                if ((nfc_cb.vs_interface[yy] == p_maps[xx].intf_type) || (NCI_INTERFACE_ESE_DIRECT == p_maps[xx].intf_type))
+#else
+                if ((nfc_cb.vs_interface[yy] == p_maps[xx].intf_type))
+#endif
                     is_supported    = TRUE;
             }
             NFC_TRACE_DEBUG3 ("[%d]: vs intf_type:0x%x is_supported:%d", xx, p_maps[xx].intf_type, is_supported);
@@ -1617,6 +1621,42 @@ INT32 NFC_EnableWired (void *pdata)
 {
     return (nfc_cb.p_hal->ioctl(HAL_NFC_IOCTL_P61_ENABLE_MODE, pdata));
 }
+#if (NXP_EXTNS == TRUE) && (NXP_WIRED_MODE_STANDBY == TRUE)
+/*******************************************************************************
++**
+** Function         NFC_Nfcee_PwrLinkCtrl
+**
+** Description      This function is called for NFCC which manages the power supply and
+**                  communication links between the NFCC and its connected NFCEEs.
+**
+** Parameters       nfcee_id   - the NFCEE ID .
+**                  cfg_value  - 0x00 ->Default Value(NFCC decides)
+**                               0x01 ->NFCEE Power Supply always On
+**                               0x03 ->NFCC to NFCEE Communication link always
+**                                      active when the NFCEE is powered on
+** Returns          tNFC_STATUS
+**
+*******************************************************************************/
+tNFC_STATUS NFC_Nfcee_PwrLinkCtrl(UINT8 nfcee_id, UINT8 cfg_value)
+{
+     return nci_snd_pwr_nd_lnk_ctrl_cmd(nfcee_id, cfg_value);
+}
+#endif
+
+/*******************************************************************************
+**
+** Function         NFC_P73ISOReset
+**
+** Description      This function request to pn54x driver to
+**                  hard reset of P73 using ISO RST configuration.
+**
+** Returns          0 if api call success, else -1
+**
+*******************************************************************************/
+INT32 NFC_P73ISOReset (void *pdata)
+{
+    return (nfc_cb.p_hal->ioctl(HAL_NFC_IOCTL_P73_ISO_RST, pdata));
+}
 
 #if((NFC_NXP_ESE_VER == JCOP_VER_3_1) || (NFC_NXP_ESE_VER == JCOP_VER_3_2))
 /*******************************************************************************
@@ -1649,6 +1689,24 @@ INT32 NFC_RelEseAccess (void *pdata)
     return (nfc_cb.p_hal->ioctl(HAL_NFC_IOCTL_P61_REL_ACCESS, pdata));
 }
 #endif
+
+#if ((NFC_NXP_CHIP_TYPE == PN548C2) || (NFC_NXP_CHIP_TYPE == PN551))
+/*******************************************************************************
+**
+** Function         NFC_RelSvddWait
+**
+** Description      This function release wait for svdd change
+**                  of P61. Status would be updated to pdata
+**
+** Returns          0 if api call success, else -1
+**
+*******************************************************************************/
+INT32 NFC_RelSvddWait (void *pdata)
+{
+    return (nfc_cb.p_hal->ioctl(HAL_NFC_IOCTL_REL_SVDD_WAIT, pdata));
+}
+#endif
+
 #endif
 
 #if(NXP_EXTNS == TRUE)
