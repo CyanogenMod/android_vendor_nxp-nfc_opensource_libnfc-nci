@@ -113,3 +113,11 @@ LOCAL_MODULE_CLASS := ETC
 LOCAL_MODULE_PATH  := $(TARGET_OUT_ETC)
 LOCAL_SRC_FILES    := libnfc-nxp-PN66T_example.conf
 include $(BUILD_PREBUILT)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE       := libnfc-nxp_default.conf
+LOCAL_MODULE_TAGS  := optional
+LOCAL_MODULE_CLASS := ETC
+LOCAL_MODULE_PATH  := $(TARGET_OUT_ETC)
+LOCAL_SRC_FILES    := libnfc-nxp-PN66T_example.conf
+include $(BUILD_PREBUILT)
