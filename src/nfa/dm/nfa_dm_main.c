@@ -67,7 +67,7 @@ static const tNFA_SYS_REG nfa_dm_sys_reg =
 #if(NXP_EXTNS == TRUE)
 tNFA_DM_CB  nfa_dm_cb;
 #else
-tNFA_DM_CB  nfa_dm_cb = {FALSE};
+tNFA_DM_CB  nfa_dm_cb = {0, };
 #endif
 
 
@@ -90,6 +90,7 @@ const tNFA_DM_ACTION nfa_dm_action[] =
     nfa_dm_act_disable_polling,         /* NFA_DM_API_DISABLE_POLLING_EVT       */
     nfa_dm_act_enable_listening,        /* NFA_DM_API_ENABLE_LISTENING_EVT      */
     nfa_dm_act_disable_listening,       /* NFA_DM_API_DISABLE_LISTENING_EVT     */
+    nfa_dm_act_disable_passive_listening,/* NFA_DM_API_DISABLE_PASSIVE_LISTENING_EVT     */
     nfa_dm_act_pause_p2p,               /* NFA_DM_API_PAUSE_P2P_EVT             */
     nfa_dm_act_resume_p2p,              /* NFA_DM_API_RESUME_P2P_EVT            */
     nfa_dm_act_send_raw_frame,          /* NFA_DM_API_RAW_FRAME_EVT             */
@@ -493,7 +494,7 @@ tNFA_STATUS nfa_dm_check_set_config (UINT8 tlv_list_len, UINT8 *p_tlv_list, BOOL
 #endif
        (updated_len || app_init)
 #if(NXP_EXTNS == TRUE)
-       && (appl_dta_mode_flag == 0x00 ))
+       && (appl_dta_mode_flag == 0x00 || nfa_dm_cb.eDtaMode == NFA_DTA_HCEF_MODE) )
        || ((appl_dta_mode_flag) && (app_init)))
 #endif
     {
@@ -506,6 +507,9 @@ tNFA_STATUS nfa_dm_check_set_config (UINT8 tlv_list_len, UINT8 *p_tlv_list, BOOL
 #endif
         if ((nfc_status = NFC_SetConfig (updated_len, p_tlv_list)) == NFC_STATUS_OK)
         {
+            if(nfa_dm_cb.eDtaMode == NFA_DTA_HCEF_MODE){
+                nfa_dm_cb.eDtaMode = NFA_DTA_DEFAULT_MODE;
+            }
             /* Keep track of whether we will need to notify NFA_DM_SET_CONFIG_EVT on NFC_SET_CONFIG_REVT */
 
             /* Get the next available bit offset for this setconfig (based on how many SetConfigs are outstanding) */
@@ -597,6 +601,9 @@ static char *nfa_dm_evt_2_str (UINT16 event)
 
     case NFA_DM_API_DISABLE_LISTENING_EVT:
         return "NFA_DM_API_DISABLE_LISTENING_EVT";
+
+    case NFA_DM_API_DISABLE_PASSIVE_LISTENING_EVT:
+        return "NFA_DM_API_DISABLE_PASSIVE_LISTENING_EVT";
 
     case NFA_DM_API_PAUSE_P2P_EVT:
         return "NFA_DM_API_PAUSE_P2P_EVT";

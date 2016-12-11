@@ -34,6 +34,7 @@ extern "C"
 #include "config.h"
 #include "android_logmsg.h"
 
+#undef LOG_TAG
 #define LOG_TAG "NfcAdaptation"
 
 extern "C" void GKI_shutdown();
@@ -52,6 +53,10 @@ ThreadCondVar NfcAdaptation::mHalCloseCompletedEvent;
 ThreadCondVar NfcAdaptation::mHalCoreResetCompletedEvent;
 ThreadCondVar NfcAdaptation::mHalCoreInitCompletedEvent;
 ThreadCondVar NfcAdaptation::mHalInitCompletedEvent;
+#define SIGNAL_NONE 0
+#define SIGNAL_SIGNALED 1
+static UINT8 isSignaled = SIGNAL_NONE;
+static UINT8 evt_status;
 #endif
 
 UINT32 ScrProtocolTraceFlag = SCR_PROTO_TRACE_ALL; //0x017F00;
@@ -357,8 +362,13 @@ void NfcAdaptation::InitializeHalDeviceContext ()
     int ret = 0; //0 means success
     if ( !GetStrValue ( NAME_NCI_HAL_MODULE, nci_hal_module, sizeof ( nci_hal_module) ) )
     {
-        ALOGE("No HAL module specified in config, falling back to nqx");
-        strlcpy (nci_hal_module, "nfc_nci.pn54x", sizeof(nci_hal_module));
+#if(NXP_EXTNS == TRUE)
+    ALOGE("No HAL module specified in config, falling back to nqx");
+    strlcpy (nci_hal_module, "nfc_nci.pn54x", sizeof(nci_hal_module));
+#else
+    ALOGE("No HAL module specified in config, falling back to BCM2079x");
+    strlcpy (nci_hal_module, "nfc_nci.bcm2079x", sizeof(nci_hal_module));
+#endif
     }
     const hw_module_t* hw_module = NULL;
 
@@ -684,6 +694,7 @@ void NfcAdaptation::DownloadFirmware ()
     tNFC_FWUpdate_Info_t fw_update_inf;
     UINT8 p_core_init_rsp_params;
     UINT8 fw_dwnld_status = NFC_STATUS_FAILED;
+    evt_status = NFC_STATUS_FAILED;
 #endif
     HalInitialize ();
 
@@ -691,21 +702,37 @@ void NfcAdaptation::DownloadFirmware ()
     ALOGD ("%s: try open HAL", func);
     HalOpen (HalDownloadFirmwareCallback, HalDownloadFirmwareDataCallback);
     mHalOpenCompletedEvent.wait ();
+    mHalOpenCompletedEvent.unlock();
 #if (NXP_EXTNS == TRUE)
     /* Send a CORE_RESET and CORE_INIT to the NFCC. This is required because when calling
      * HalCoreInitialized, the HAL is going to parse the conf file and send NCI commands
      * to the NFCC. Hence CORE-RESET and CORE-INIT have to be sent prior to this.
      */
-    mHalCoreResetCompletedEvent.lock();
+    isSignaled = SIGNAL_NONE;
     ALOGD("%s: send CORE_RESET", func);
     HalWrite(cmd_reset_nci_size , cmd_reset_nci);
-    mHalCoreResetCompletedEvent.wait();
-    mHalCoreInitCompletedEvent.lock();
+    mHalCoreResetCompletedEvent.lock();
+    if (SIGNAL_NONE == isSignaled) {
+        mHalCoreResetCompletedEvent.wait();
+    }
+    isSignaled = SIGNAL_NONE;
+    mHalCoreResetCompletedEvent.unlock();
+    if(evt_status == NFC_STATUS_FAILED)
+    {
+        goto TheEnd;
+    }
     ALOGD("%s: send CORE_INIT", func);
     HalWrite(cmd_init_nci_size , cmd_init_nci);
-    mHalCoreInitCompletedEvent.wait();
-    mHalInitCompletedEvent.lock ();
-
+    mHalCoreInitCompletedEvent.lock();
+    if (SIGNAL_NONE == isSignaled) {
+        mHalCoreInitCompletedEvent.wait();
+    }
+    isSignaled = SIGNAL_NONE;
+    mHalCoreInitCompletedEvent.unlock();
+    if(evt_status == NFC_STATUS_FAILED)
+    {
+        goto TheEnd;
+    }
     mHalEntryFuncs.ioctl(HAL_NFC_IOCTL_CHECK_FLASH_REQ, &fw_update_inf);
     NFC_TRACE_DEBUG1 ("fw_update required  -> %d", fw_update_inf.fw_update_reqd);
     if(fw_update_inf.fw_update_reqd == TRUE)
@@ -717,18 +744,52 @@ void NfcAdaptation::DownloadFirmware ()
         }
         else
         {
+            isSignaled = SIGNAL_NONE;
+            ALOGD("%s: send CORE_RESET", func);
+            HalWrite(cmd_reset_nci_size , cmd_reset_nci);
+            mHalCoreResetCompletedEvent.lock();
+            if (SIGNAL_NONE == isSignaled) {
+                mHalCoreResetCompletedEvent.wait();
+            }
+            isSignaled = SIGNAL_NONE;
+            mHalCoreResetCompletedEvent.unlock();
+            if(evt_status == NFC_STATUS_FAILED)
+            {
+                goto TheEnd;
+            }
+            ALOGD("%s: send CORE_INIT", func);
+            HalWrite(cmd_init_nci_size , cmd_init_nci);
+            mHalCoreInitCompletedEvent.lock();
+            if (SIGNAL_NONE == isSignaled) {
+                mHalCoreInitCompletedEvent.wait();
+            }
+            isSignaled = SIGNAL_NONE;
+            mHalCoreInitCompletedEvent.unlock();
+            if(evt_status == NFC_STATUS_FAILED)
+            {
+                goto TheEnd;
+            }
             ALOGD ("%s: try init HAL", func);
             HalCoreInitialized (&p_core_init_rsp_params);
+            mHalInitCompletedEvent.lock ();
             mHalInitCompletedEvent.wait ();
+            mHalInitCompletedEvent.unlock ();
         }
     }
-#endif
 
-    mHalCloseCompletedEvent.lock ();
+    TheEnd:
+    isSignaled = SIGNAL_NONE;
+#endif
     ALOGD ("%s: try close HAL", func);
     HalClose ();
-    mHalCloseCompletedEvent.wait ();
-
+#if (NXP_EXTNS == TRUE)
+    mHalCloseCompletedEvent.lock ();
+    if (SIGNAL_NONE == isSignaled) {
+        mHalCloseCompletedEvent.wait ();
+    }
+    isSignaled = SIGNAL_NONE;
+    mHalCloseCompletedEvent.unlock();
+#endif
     HalTerminate ();
     ALOGD ("%s: exit", func);
 }
@@ -764,6 +825,9 @@ void NfcAdaptation::HalDownloadFirmwareCallback (nfc_event_t event, nfc_status_t
     case HAL_NFC_CLOSE_CPLT_EVT:
         {
             ALOGD ("%s: HAL_NFC_CLOSE_CPLT_EVT", func);
+#if (NXP_EXTNS == TRUE)
+            isSignaled = SIGNAL_SIGNALED;
+#endif
             mHalCloseCompletedEvent.signal ();
             break;
         }
@@ -782,8 +846,10 @@ void NfcAdaptation::HalDownloadFirmwareCallback (nfc_event_t event, nfc_status_t
 void NfcAdaptation::HalDownloadFirmwareDataCallback (uint16_t data_len, uint8_t* p_data)
 {
 #if (NXP_EXTNS == TRUE)
+    isSignaled = SIGNAL_SIGNALED;
     if (data_len > 3)
     {
+        evt_status = NFC_STATUS_OK;
         if (p_data[0] == 0x40 && p_data[1] == 0x00)
         {
             mHalCoreResetCompletedEvent.signal();
@@ -792,6 +858,12 @@ void NfcAdaptation::HalDownloadFirmwareDataCallback (uint16_t data_len, uint8_t*
         {
             mHalCoreInitCompletedEvent.signal();
         }
+    }
+    else
+    {
+        evt_status = NFC_STATUS_FAILED;
+        mHalCoreResetCompletedEvent.signal();
+        mHalCoreInitCompletedEvent.signal();
     }
 #endif
 }

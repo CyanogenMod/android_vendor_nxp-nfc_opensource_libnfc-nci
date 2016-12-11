@@ -33,7 +33,10 @@
 #include "nfa_sys_int.h"
 #include "nfc_api.h"
 #include "nfa_ee_int.h"
-#if((NFC_NXP_CHIP_TYPE == PN548C2) || (NFC_NXP_CHIP_TYPE == PN551))
+#if(NXP_EXTNS == TRUE)
+#include "nfa_hci_int.h"
+#endif
+#if(NFC_NXP_CHIP_TYPE != PN547C2)
 #include <config.h>
 #endif
 
@@ -108,7 +111,7 @@ UINT8 NFA_REMOVE_ALL_AID[] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
 UINT8 nfa_ee_ce_route_strict_disable = 0x01;
 BOOLEAN  gNfaProvisionMode = FALSE; /* to know if device is set to provision mode or not */
 UINT8 nfa_ee_ce_p61_active = 0x00;
-#if(((NFC_NXP_CHIP_TYPE == PN548C2) || (NFC_NXP_CHIP_TYPE == PN551)) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
+#if((NFC_NXP_CHIP_TYPE != PN547C2) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
 static UINT16 max_routing_table_size;
 static UINT16 max_aid_config_length;
 static UINT16 max_aid_entries;
@@ -518,8 +521,7 @@ void nfa_ee_api_register(tNFA_EE_MSG *p_data)
             }
         }
     }
-#if((NXP_EXTNS == TRUE) && ((NFC_NXP_CHIP_TYPE == PN548C2) || (NFC_NXP_CHIP_TYPE == PN551)) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
-
+#if((NXP_EXTNS == TRUE) && (NFC_NXP_CHIP_TYPE != PN547C2) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
      max_routing_table_size = nfc_ncif_getMaxRoutingTableSize();
     if(max_routing_table_size < (NFA_EE_TOTAL_TECH_ROUTE_SIZE + NFA_EE_TOTAL_PROTO_ROUTE_SIZE))
     {
@@ -576,7 +578,7 @@ void nfa_ee_api_register(tNFA_EE_MSG *p_data)
 void nfa_ee_api_deregister(tNFA_EE_MSG *p_data)
 {
     tNFA_EE_CBACK *p_cback = NULL;
-#if((NXP_EXTNS == TRUE) && ((NFC_NXP_CHIP_TYPE == PN548C2) || (NFC_NXP_CHIP_TYPE == PN551)) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
+#if((NXP_EXTNS == TRUE) && (NFC_NXP_CHIP_TYPE != PN547C2) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
     int                 index  = p_data->deregister.index, xx = 0;
 #else
      int                 index  = p_data->deregister.index;
@@ -584,7 +586,7 @@ void nfa_ee_api_deregister(tNFA_EE_MSG *p_data)
     tNFA_EE_CBACK_DATA  evt_data = {0};
 
     NFA_TRACE_DEBUG0 ("nfa_ee_api_deregister");
-#if((NXP_EXTNS == TRUE) && ((NFC_NXP_CHIP_TYPE == PN548C2) || (NFC_NXP_CHIP_TYPE == PN551)) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
+#if((NXP_EXTNS == TRUE) && (NFC_NXP_CHIP_TYPE != PN547C2) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
     for(xx = 0; xx < NFA_EE_NUM_ECBS; xx++)
     {
         GKI_freebuf(nfa_ee_cb.ecb[xx].aid_len);
@@ -861,14 +863,14 @@ void nfa_ee_api_add_aid(tNFA_EE_MSG *p_data)
         len_needed  = p_add->aid_len + 2; /* tag/len */
 
         if ((len_needed + len) >
-#if((NXP_EXTNS == TRUE) && ((NFC_NXP_CHIP_TYPE == PN548C2) || (NFC_NXP_CHIP_TYPE == PN551)) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
+#if((NXP_EXTNS == TRUE) && (NFC_NXP_CHIP_TYPE != PN547C2) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
         max_aid_config_length
 #else
         NFA_EE_MAX_AID_CFG_LEN
 #endif
         )
         {
-#if((NXP_EXTNS == TRUE) && ((NFC_NXP_CHIP_TYPE == PN548C2) || (NFC_NXP_CHIP_TYPE == PN551)) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
+#if((NXP_EXTNS == TRUE) && (NFC_NXP_CHIP_TYPE != PN547C2) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
             NFA_TRACE_ERROR3 ("Exceed capacity: (len_needed:%d + len:%d) > max_aid_config_length:%d", len_needed, len, max_aid_config_length);
 #else
             NFA_TRACE_ERROR3 ("Exceed capacity: (len_needed:%d + len:%d) > NFA_EE_MAX_AID_CFG_LEN:%d", len_needed, len, NFA_EE_MAX_AID_CFG_LEN);
@@ -876,7 +878,7 @@ void nfa_ee_api_add_aid(tNFA_EE_MSG *p_data)
             evt_data.status = NFA_STATUS_BUFFER_FULL;
         }
 #if(NXP_EXTNS == TRUE)
-#if(((NFC_NXP_CHIP_TYPE == PN548C2) || (NFC_NXP_CHIP_TYPE == PN551)) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
+#if((NFC_NXP_CHIP_TYPE != PN547C2) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
         else if (dh_ecb->aid_entries < max_aid_entries)
 #else
         else if (dh_ecb->aid_entries < NFA_EE_MAX_AID_ENTRIES)
@@ -922,7 +924,7 @@ void nfa_ee_api_add_aid(tNFA_EE_MSG *p_data)
         }
         else
         {
-#if((NXP_EXTNS == TRUE) && ((NFC_NXP_CHIP_TYPE == PN548C2) || (NFC_NXP_CHIP_TYPE == PN551)) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
+#if((NXP_EXTNS == TRUE) && (NFC_NXP_CHIP_TYPE != PN547C2) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
             NFA_TRACE_ERROR1 ("Exceed NFA_EE_MAX_AID_ENTRIES:%d", max_aid_entries);
 #else
             NFA_TRACE_ERROR1 ("Exceed NFA_EE_MAX_AID_ENTRIES:%d", NFA_EE_MAX_AID_ENTRIES);
@@ -1009,8 +1011,6 @@ void nfa_ee_api_remove_aid(tNFA_EE_MSG *p_data)
         tNFA_EE_ECB *p_cb = nfa_ee_cb.ecb;
         for (xx = 0; xx < NFA_EE_MAX_EE_SUPPORTED; xx++, p_cb++)
         {
-
-
 #if((NXP_EXTNS == TRUE) && (((NFC_NXP_CHIP_TYPE == PN548C2) || (NFC_NXP_CHIP_TYPE == PN551)) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE)))
             memset(&p_cb->aid_cfg[0],0x00, max_aid_config_length);
             memset(&p_cb->aid_len[0], 0x00, max_aid_entries);
@@ -1029,7 +1029,7 @@ void nfa_ee_api_remove_aid(tNFA_EE_MSG *p_data)
         tNFA_EE_ECB *p_ecb = &nfa_ee_cb.ecb[NFA_EE_CB_4_DH];
 
 #if((NXP_EXTNS == TRUE) && (((NFC_NXP_CHIP_TYPE == PN548C2) || (NFC_NXP_CHIP_TYPE == PN551)) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE)))
-        memset(&p_cb->aid_cfg[0],0x00, max_aid_config_length);
+        memset(&p_ecb->aid_cfg[0],0x00, max_aid_config_length);
         memset(&p_ecb->aid_len[0], 0x00, max_aid_entries);
         memset(&p_ecb->aid_pwr_cfg[0], 0x00, max_aid_entries);
         memset(&p_ecb->aid_rt_info[0], 0x00, max_aid_entries);
@@ -1245,6 +1245,7 @@ void nfa_ee_report_disc_done(BOOLEAN notify_enable_done)
             nfa_ee_report_event (p_cback, NFA_EE_DISCOVER_EVT, &evt_data);
         }
 #if(NXP_EXTNS == TRUE)
+#if (JCOP_WA_ENABLE == TRUE)
         else
         {
             evt_data.status                         = NFA_STATUS_OK;
@@ -1252,6 +1253,7 @@ void nfa_ee_report_disc_done(BOOLEAN notify_enable_done)
             NFA_AllEeGetInfo(&evt_data.ee_discover.num_ee, evt_data.ee_discover.ee_info);
             nfa_ee_report_event (NULL, NFA_EE_DISCOVER_EVT, &evt_data);
         }
+#endif
 #endif
     }
 }
@@ -1552,6 +1554,16 @@ void nfa_ee_nci_disc_ntf(tNFA_EE_MSG *p_data)
                 memcpy(p_info->ee_tlv, p_cb->ee_tlv, p_cb->num_tlvs * sizeof(tNFA_EE_TLV));
                 nfa_ee_report_event (NULL, NFA_EE_NEW_EE_EVT, &evt_data);
             }
+
+#if(NXP_EXTNS == TRUE)
+            if(nfa_dm_is_active())
+            {
+                evt_data.status                         = p_cb->ee_status;
+                evt_data.ee_discover.num_ee             = NFA_EE_MAX_EE_SUPPORTED;
+                NFA_EeGetInfo(&evt_data.ee_discover.num_ee, evt_data.ee_discover.ee_info);
+                nfa_ee_report_event (NULL, NFA_EE_DISCOVER_EVT, &evt_data);
+            }
+#endif
         }
         else
             nfa_ee_report_disc_done(notify_enable_done);
@@ -1580,6 +1592,17 @@ void nfa_ee_nci_disc_ntf(tNFA_EE_MSG *p_data)
             nfa_ee_evt_hdlr((BT_HDR *)p_data);
         }
     }
+#if(NXP_EXTNS == TRUE)
+    if(p_cb)
+    {
+        if((nfa_hci_cb.hci_state == NFA_HCI_STATE_WAIT_NETWK_ENABLE)&&(p_cb->ee_status != NFA_EE_STATUS_ACTIVE))
+       {
+           NFA_TRACE_DEBUG2 ("nfa_ee_nci_disc_ntf hci_state : 0x%02x  ee_status : 0x%02x",nfa_hci_cb.hci_state,p_cb->ee_status);
+           nfa_sys_stop_timer (&nfa_hci_cb.timer);
+           nfa_sys_start_timer (&nfa_hci_cb.timer, NFA_HCI_RSP_TIMEOUT_EVT, 150);
+       }
+    }
+#endif
 }
 
 /*******************************************************************************
@@ -1706,7 +1729,26 @@ static void nfa_ee_report_discover_req_evt(void)
     nfa_ee_build_discover_req_evt (&evt_data);
     nfa_ee_report_event(NULL, NFA_EE_DISCOVER_REQ_EVT, (void *)&evt_data);
 }
-
+#if (NXP_EXTNS == TRUE) && (NXP_WIRED_MODE_STANDBY == TRUE)
+/*******************************************************************************
+**
+** Function         nfa_ee_nci_pwr_link_ctrl_rsp
+**
+** Description      Process the result for NFCEE PWR and link ctrl response
+**
+** Returns          void
+**
+*******************************************************************************/
+void nfa_ee_nci_pwr_link_ctrl_rsp(tNFA_EE_MSG *p_data)
+{
+    tNFA_EE_ECB *p_cb;
+    tNFA_EE_PWR_LNK_CTRL    pwr_lnk_ctrl;
+    tNFC_NFCEE_EE_PWR_LNK_REVT  *p_rsp = p_data->pwr_lnk_ctrl_rsp.p_data;
+    pwr_lnk_ctrl.status     = p_rsp->status;
+    NFA_TRACE_DEBUG1(" nfa_ee_nci_pwr_link_ctrl_rsp: status = %d ", pwr_lnk_ctrl.status);
+    nfa_ee_report_event(NULL, NFA_EE_PWR_LINK_CTRL_EVT, (tNFA_EE_CBACK_DATA *)&pwr_lnk_ctrl);
+}
+#endif
 /*******************************************************************************
 **
 ** Function         nfa_ee_nci_mode_set_rsp
@@ -2294,7 +2336,23 @@ tNFA_STATUS nfa_ee_route_add_one_ecb(tNFA_EE_ECB *p_cb, int *p_max_len, BOOLEAN 
     UINT8   *p_start;
     UINT8   new_size;
     tNFA_STATUS status = NFA_STATUS_OK;
-
+#if(NXP_NFCC_ROUTING_BLOCK_BIT==TRUE)
+    UINT8 value=0x00;
+    long retlen = 0;
+    NFA_TRACE_DEBUG1 ("NAME_NXP_PROP_BLACKLIST_ROUTING enter=0x%x",value);
+    if(GetNumValue(NAME_NXP_PROP_BLACKLIST_ROUTING, (void *)&retlen, sizeof(retlen)))
+    {
+        if(retlen == 0x01)
+        {
+            value =NFA_EE_NXP_ROUTE_BLOCK_BIT;
+            NFA_TRACE_DEBUG1 ("NAME_NXP_PROP_BLACKLIST_ROUTING change=0x%x",value);
+         }
+        else
+        {
+            NFA_TRACE_DEBUG1 ("NAME_NXP_PROP_BLACKLIST_ROUTING exit=0x%x",value);
+        }
+    }
+#endif
     nfa_ee_check_set_routing (p_cb->size_mask, p_max_len, ps, p_cur_offset);
     max_tlv = (UINT8)((*p_max_len > NFA_EE_ROUT_MAX_TLV_SIZE)?NFA_EE_ROUT_MAX_TLV_SIZE:*p_max_len);
     /* use the first byte of the buffer (ps) to keep the num_tlv */
@@ -2322,12 +2380,19 @@ tNFA_STATUS nfa_ee_route_add_one_ecb(tNFA_EE_ECB *p_cb, int *p_max_len, BOOLEAN 
                 pa ++; /* EMV tag */
                 len     = *pa++; /* aid_len */
                 if(p_cb->aid_rt_info[xx] & NFA_EE_AE_NXP_PREFIX_MATCH) {
-                 //This aid is for prefix match.
-                 *pp++   = NFC_ROUTE_TAG_AID|NFA_EE_AE_NXP_PREFIX_MATCH;
+                    //This aid is for prefix match.
+                    *pp   = NFC_ROUTE_TAG_AID|NFA_EE_AE_NXP_PREFIX_MATCH;
+#if(NXP_NFCC_ROUTING_BLOCK_BIT==TRUE)
+                    *pp  |= (NFA_EE_NXP_ROUTE_BLOCK_BIT & value)?NFA_EE_NXP_ROUTE_BLOCK_BIT:0x00;
+#endif
                 } else {
-                  //This aid is for exact match.
-                  *pp++   = NFC_ROUTE_TAG_AID;
+                    //This aid is for exact match.
+                    *pp   = NFC_ROUTE_TAG_AID;
+#if(NXP_NFCC_ROUTING_BLOCK_BIT==TRUE)
+                    *pp  |= (NFA_EE_NXP_ROUTE_BLOCK_BIT & value)?NFA_EE_NXP_ROUTE_BLOCK_BIT:0x00;
+#endif
                 }
+                *pp++;
                 *pp++   = len + 2;
                 *pp++   = p_cb->aid_rt_loc[xx];
                 *pp++   = p_cb->aid_pwr_cfg[xx];
@@ -2387,7 +2452,15 @@ tNFA_STATUS nfa_ee_route_add_one_ecb(tNFA_EE_ECB *p_cb, int *p_max_len, BOOLEAN 
         }
         if (power_cfg)
         {
-            *proto_pp++   = NFC_ROUTE_TAG_PROTO;
+            *proto_pp   = NFC_ROUTE_TAG_PROTO;
+#if(NXP_NFCC_ROUTING_BLOCK_BIT==TRUE)
+            /*Setting blocking bit for ISO-DEP and ISO7816 protocol only*/
+            if(nfa_ee_proto_list[xx]==NFC_PROTOCOL_ISO_DEP || nfa_ee_proto_list[xx] == NFC_PROTOCOL_ISO7816)
+            {
+                *proto_pp  |= (NFA_EE_NXP_ROUTE_BLOCK_BIT & value)?NFA_EE_NXP_ROUTE_BLOCK_BIT:0x00;
+            }
+#endif
+            *proto_pp++;
             *proto_pp++   = 3;
             *proto_pp++   = p_cb->nfcee_id;
             *proto_pp++   = power_cfg;
@@ -2417,6 +2490,7 @@ tNFA_STATUS nfa_ee_route_add_one_ecb(tNFA_EE_ECB *p_cb, int *p_max_len, BOOLEAN 
         *proto_pp++   = NFC_PROTOCOL_NFC_DEP;
         proto_tlv_ctr++;
     }
+
 /* store  the Technology based routing entries in temporary buffer */
 for (xx = 0; xx < NFA_EE_NUM_TECH; xx++)
 {
@@ -2512,7 +2586,15 @@ for (xx = 0; xx < NFA_EE_NUM_TECH; xx++)
 
         if (power_cfg)
         {
-            *pp++   = NFC_ROUTE_TAG_PROTO;
+            *pp  = NFC_ROUTE_TAG_PROTO;
+#if(NXP_NFCC_ROUTING_BLOCK_BIT==TRUE)
+            /*Setting blocking bit for ISO-DEP and ISO7816 protocol only*/
+            if(nfa_ee_proto_list[xx]==NFC_PROTOCOL_ISO_DEP || nfa_ee_proto_list[xx] == NFC_PROTOCOL_ISO7816)
+            {
+                *pp  |= (NFA_EE_NXP_ROUTE_BLOCK_BIT & value)?NFA_EE_NXP_ROUTE_BLOCK_BIT:0x00;
+            }
+#endif
+            *pp++;
             *pp++   = 3;
             *pp++   = p_cb->nfcee_id;
             *pp++   = power_cfg;
@@ -2570,11 +2652,15 @@ for (xx = 0; xx < NFA_EE_NUM_TECH; xx++)
                 len     = *pa++; /* aid_len */
 #if(NXP_EXTNS == TRUE)
                 if(p_cb->aid_rt_info[xx] & NFA_EE_AE_NXP_PREFIX_MATCH) {
+#if(NXP_NFCC_ROUTING_BLOCK_BIT==FALSE)
                     //This aid is for prefix match.
-                    *pp++   = NFC_ROUTE_TAG_AID|NFA_EE_AE_NXP_PREFIX_MATCH;
+                    *pp++   = (NFC_ROUTE_TAG_AID|NFA_EE_AE_NXP_PREFIX_MATCH)|((NFA_EE_NXP_ROUTE_BLOCK_BIT & value)?NFA_EE_NXP_ROUTE_BLOCK_BIT:0x00);
+#endif
                 } else {
+#if(NXP_NFCC_ROUTING_BLOCK_BIT==FALSE)
                     //This aid is for exact match.
-                    *pp++   = NFC_ROUTE_TAG_AID;
+                    *pp++   = NFC_ROUTE_TAG_AID|((NFA_EE_NXP_ROUTE_BLOCK_BIT & value)?NFA_EE_NXP_ROUTE_BLOCK_BIT:0x00);
+#endif
                 }
 #else
                 *pp++   = NFC_ROUTE_TAG_AID;
@@ -2843,7 +2929,7 @@ void nfa_ee_lmrt_to_nfcc(tNFA_EE_MSG *p_data)
 #endif
     (void)p_data;
 
-#if((NXP_EXTNS == TRUE) && ((NFC_NXP_CHIP_TYPE == PN548C2) || (NFC_NXP_CHIP_TYPE == PN551)) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
+#if((NXP_EXTNS == TRUE) && (NFC_NXP_CHIP_TYPE != PN547C2) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
     NFA_TRACE_DEBUG1("max supported routing table size: %d", max_routing_table_size);
     /* update routing table: DH and the activated NFCEEs */
     p = (UINT8 *)GKI_getbuf(max_routing_table_size);
@@ -2898,8 +2984,8 @@ void nfa_ee_lmrt_to_nfcc(tNFA_EE_MSG *p_data)
     {
         more = FALSE;
     }
-#if((NFC_NXP_CHIP_TYPE == PN548C2) || (NFC_NXP_CHIP_TYPE == PN551))
-    find_and_resolve_tech_conflict();
+#if(NFC_NXP_CHIP_TYPE != PN547C2)
+    //find_and_resolve_tech_conflict();
 #endif
     /* add the routing for DH first */
     status  = NFA_STATUS_OK;
@@ -2955,7 +3041,7 @@ void nfa_ee_lmrt_to_nfcc(tNFA_EE_MSG *p_data)
 }
 
 
-#if((NFC_NXP_CHIP_TYPE == PN548C2) || (NFC_NXP_CHIP_TYPE == PN551))
+#if(NFC_NXP_CHIP_TYPE != PN547C2)
 /*******************************************************************************
 **
 ** Function         find_and_resolve_tech_conflict
@@ -3019,9 +3105,9 @@ void find_and_resolve_tech_conflict()
     NFA_TRACE_DEBUG5 ("%s:p_cb->nfcee_id=0x%x,p_cb->tech_switch_on= 0x%x,p_cb->tech_switch_off= 0x%x,p_cb->tech_battery_off= 0x%x", __FUNCTION__, p_cb->nfcee_id,p_cb->tech_switch_on,p_cb->tech_switch_off,p_cb->tech_battery_off);
 
     //Preferred SE Selected.
-    if((GetNumValue(NAME_NXP_PRFD_TECH_SE, &preferred_se, sizeof(preferred_se))))
+    if((GetNumValue(NAME_DEFAULT_OFFHOST_ROUTE, &preferred_se, sizeof(preferred_se))))
     {
-        NFA_TRACE_DEBUG2 ("%s:NXP_PRFD_TECH_SE=0x0%lu;", __FUNCTION__, preferred_se);
+        NFA_TRACE_DEBUG2 ("%s:NXP_DEFAULT_OFFHOST_ROUTE=0x0%lu;", __FUNCTION__, preferred_se);
         if(preferred_se==0x01)
             preferred_se=0xc0; //Ese
         else if(preferred_se==0x02)
@@ -3134,7 +3220,7 @@ UINT16 nfa_ee_lmrt_size()
     NFA_TRACE_DEBUG0 ("nfa_ee_lmrt_size");
     int     len;
     len = nfa_all_ee_find_total_aid_len() + 2 /* tag/len */ + 2 /*route/power state*/;
-#if(((NFC_NXP_CHIP_TYPE == PN548C2) || (NFC_NXP_CHIP_TYPE == PN551)) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
+#if((NFC_NXP_CHIP_TYPE != PN547C2) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
     return len < max_aid_config_length?len:max_aid_config_length;
 #else
     return len < NFA_EE_MAX_AID_CFG_LEN?len:NFA_EE_MAX_AID_CFG_LEN;
@@ -3157,7 +3243,8 @@ BOOLEAN nfa_ee_nfeeid_active(UINT8 nfee_id)
     }
     return status;
 }
-#if(((NFC_NXP_CHIP_TYPE == PN548C2) || (NFC_NXP_CHIP_TYPE == PN551)) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
+
+#if((NFC_NXP_CHIP_TYPE != PN547C2) && (NFC_NXP_AID_MAX_SIZE_DYN == TRUE))
 /*******************************************************************************
 **
 ** Function         nfa_ee_find_max_aid_config_length
